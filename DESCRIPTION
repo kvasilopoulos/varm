@@ -22,3 +22,5 @@ Imports:
     glue,
     modelr,
     rlang
+URL: https://github.com/kvasilopoulos/abvar
+BugReports: https://github.com/kvasilopoulos/abvar/issues
