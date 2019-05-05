@@ -1,5 +1,5 @@
 Package: abvar
-Title: All About Vector Autoregression
+Title: All aBout Vector Autoregression
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Kostas",
