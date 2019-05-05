@@ -39,7 +39,7 @@ mat_lag <- function(x, dimension = 1) {
 #' @importFrom modelr model_matrix
 #' @importFrom rlang is_formula
 #' @importFrom dplyr bind_cols
-#' @example
+#' @examples
 #'
 #' .data <-
 #'  tibble(
