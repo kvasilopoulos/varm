@@ -2,23 +2,19 @@
 % Please edit documentation in R/spec.R
 \name{spec}
 \alias{spec}
-\title{Model Specification}
+\title{Specification}
 \usage{
 spec(.data, .formula, .endo_lags = 2, .exo_lags = 2)
 }
-\description{
-Model Specification
+\arguments{
+\item{.data}{df}
+
+\item{.formula}{the formula}
+
+\item{.endo_lags}{of endogenous lags}
+
+\item{.exo_lags}{of exogenous lags}
 }
-\examples{
-
-.data <-
- tibble(
-   x = rnorm(100),
-   y = rnorm(100),
-   z = rnorm(100)
- )
-
-.data \%>\%
-  add_trend() \%>\%
-  model_spec(x + y ~ 1) \%>\%
+\description{
+Specification
 }

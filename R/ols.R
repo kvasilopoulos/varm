@@ -1,3 +1,7 @@
+#' Least Square Estimation of VAR models
+#'
+#' @param x a `spec` object
+#' @importFrom dplyr slice
 #' @export
 ols <- function(x) {
 

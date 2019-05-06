@@ -13,12 +13,12 @@ model_response <- function(.data, .formula) {
 # lag_matrix --------------------------------------------------------------
 
 #' @importFrom purrr set_names map_df reduce
-#' @importFrom dplyr bind_cols
+#' @importFrom dplyr bind_cols lag
 #' @importFrom glue glue
 tbl_lag <- function(x, dimension = 1) {
   temp <- vector("list", length = dimension)
   for (dims in 1:dimension) {
-    temp[[dims]] <- map_df(x, lag, dims) %>%
+    temp[[dims]] <- map_df(x, dplyr::lag, dims) %>%
       set_names(glue("{names(x)}_lag{dims}"))
   }
   reduce(temp, bind_cols)
@@ -34,23 +34,19 @@ mat_lag <- function(x, dimension = 1) {
 
 # Model Specification -----------------------------------------------------
 
-#' Model Specification
+#' Specification
+#'
+#' @param .data df
+#' @param .formula the formula
+#' @param .endo_lags # of endogenous lags
+#' @param .exo_lags # of exogenous lags
 #'
 #' @importFrom modelr model_matrix
 #' @importFrom rlang is_formula
-#' @importFrom dplyr bind_cols
-#' @examples
+#' @importFrom dplyr bind_cols everything select tibble slice
+#' @importFrom purrr when
+#' @importFrom stats as.formula terms.formula
 #'
-#' .data <-
-#'  tibble(
-#'    x = rnorm(100),
-#'    y = rnorm(100),
-#'    z = rnorm(100)
-#'  )
-#'
-#' .data %>%
-#'   add_trend() %>%
-#'   model_spec(x + y ~ 1) %>%
 #' @export
 spec <- function(.data, .formula, .endo_lags = 2, .exo_lags = 2) {
 
@@ -105,7 +101,7 @@ spec <- function(.data, .formula, .endo_lags = 2, .exo_lags = 2) {
   }
 
   structure(
-    tibble::lst(
+    dplyr::lst(
       lhs = lhs,
       rhs = rhs,
       lhs_lags = lhs_lags,
@@ -119,12 +115,12 @@ spec <- function(.data, .formula, .endo_lags = 2, .exo_lags = 2) {
       endo_lags = .endo_lags,
       exo_lags = .exo_lags
     ),
-    class = "model_spec"
+    class = "spec"
   )
 }
 
-
-print.model_spec <- function(x) {
+#' @importFrom stringr str_replace
+print.spec <- function(x) {
 
 
   cat(grey("## Model Specification\n"))
