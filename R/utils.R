@@ -1,18 +1,26 @@
 
-# Printing helpers --------------------------------------------------------
+#' 3d array into tibble
+#' @importFrom tidyr expand_grid
+array_to_tbl <- function(x) {
+  dims <- dim(x)
+  nms <- rownames(x)
+  grid_names <- expand.grid(
+    impulse = nms,
+    response =  nms,
+    horizon = 1:dims[3])
+  grid_names %>%
+    add_column(irf = c(x)) %>% # c() to collapse dims of x
+    arrange(impulse, response, horizon)
+}
+
+# custom colors -----------------------------------------------------------
 
 grey <- crayon::make_style("#949494")
 
 gold <- crayon::make_style("#e6be8a")
 
-# asfd --------------------------------------------------------------------
 
-
-inv <- function(x) {
-  solve(x)
-}
-
-# asdf --------------------------------------------------------------------
+# helpers ----------------------------------------------------------------
 
 
 is_character0 <- function(x) {
@@ -21,22 +29,23 @@ is_character0 <- function(x) {
 
 `%ni%` <- Negate(`%in%`)
 
-
-# defensive ---------------------------------------------------------------
-
-warning_glue <- function(..., .sep = "", .envir = parent.frame(),
-                         call. = FALSE, .domain = NULL) {
-  warning(
-    glue(..., .sep = .sep, .envir = .envir),
-    call. = call., domain = .domain
-  )
+`%||%` <- function(x, y) {
+  if (is.null(x))
+    y
+  else x
 }
 
-stop_glue <- function(..., .sep = "", .envir = parent.frame(),
-                      call. = FALSE, .domain = NULL) {
-  stop(
-    glue(..., .sep = .sep, .envir = .envir),
-    call. = call., domain = .domain
-  )
+meta_matrix <- function(x, ...) {
+  structure(x, ...)
 }
+
+make_dummy_if <- function(condition) {
+  if (condition) {
+    1
+  } else{
+    0
+  }
+}
+
+
 

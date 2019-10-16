@@ -4,7 +4,7 @@
 \alias{spec}
 \title{Specification}
 \usage{
-spec(.data, .formula, .endo_lags = 2, .exo_lags = 2)
+spec(.data, .formula, .endo_lags = 2, .trend = FALSE, .exo_lags = 2)
 }
 \arguments{
 \item{.data}{df}

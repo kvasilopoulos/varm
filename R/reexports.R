@@ -1,7 +1,32 @@
-#' @importFrom vargenerics irf
-#' @export
-vargenerics::irf
 
-#' @importFrom vargenerics fevd
+
+#' @importFrom smgenerics irf
 #' @export
-vargenerics::fevd
+smgenerics::irf
+
+#' @importFrom smgenerics fevd
+#' @export
+smgenerics::fevd
+
+#' @importFrom smgenerics hd
+#' @export
+smgenerics::hd
+
+#' @importFrom smgenerics forecast
+#' @export
+smgenerics::forecast
+
+
+# ggplot2 -----------------------------------------------------------------
+
+
+#' @importFrom ggplot2 autoplot
+#' @export
+ggplot2::autoplot
+
+#' @importFrom ggplot2 autolayer
+#' @export
+ggplot2::autolayer
+
+
+

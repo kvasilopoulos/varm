@@ -19,13 +19,15 @@ Imports:
     modelr (>= 0.1.4),
     purrr (>= 0.3.2),
     rlang (>= 0.3.4),
-    vargenerics,
+    smgenerics,
     cli,
     stringi,
     stringr,
-    magrittr
+    magrittr,
+    Matrix,
+    expm
 Remotes:
-    kvasilopoulos/vargenerics
+    kvasilopoulos/smgenerics
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1

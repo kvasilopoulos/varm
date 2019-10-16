@@ -25,12 +25,37 @@ tbl_lag <- function(x, dimension = 1) {
 }
 
 
-mat_lag <- function(x, dimension = 1) {
-  x %>%
-    tbl_lag(dimension = 1) %>%
-    slice(-c(1:dimension)) %>%
-    as.matrix()
+mat_lag <- function(x, lags = 1) {
+  dt <- as.matrix(x)
+  nc <- ncol(dt)
+  embed(dt, dimension = lags + 1)[, -1, drop = FALSE]
 }
+
+
+# trend -------------------------------------------------------------------
+
+#' @importFrom rlang eval_bare enexpr
+custom_trend <- function(n, .f) {
+  if (missing(.f)) {
+    .expr <- rlang::expr(.t)
+  }else{
+    .expr <- rlang::enexpr(.f)
+  }
+  .env <- rlang::env(.t = 1:n)
+  rlang::eval_bare(.expr, env = .env)
+}
+
+trend_fun <- function(type = c("linera", "quadratic")) {
+  function(x) {
+    if (type == "linear") {
+      fun <- custom_trend(x, .t)
+    }else{
+      fun <- custom_trend(x, .t + .t^2)
+    }
+    fun
+  }
+}
+
 
 # Model Specification -----------------------------------------------------
 
@@ -43,14 +68,28 @@ mat_lag <- function(x, dimension = 1) {
 #'
 #' @importFrom modelr model_matrix
 #' @importFrom rlang is_formula
-#' @importFrom dplyr bind_cols everything select tibble slice
+#' @importFrom dplyr bind_cols everything select tibble slice rename
 #' @importFrom purrr when
 #' @importFrom stats as.formula terms.formula
 #'
 #' @export
-spec <- function(.data, .formula, .endo_lags = 2, .exo_lags = 2) {
+spec <- function(.data, .formula, .endo_lags = 2, .endo_names = NULL,
+                 .trend = FALSE, .factor_names = NULL,
+                 .exo_names = NULL, .exo_lags = NULL) {
+
+  nr <- nrow(.data)
+
+  if (is.character(.trend)) {
+    type <- match.arg(.trend, choices = c("linear", "quadratic"))
+    trend_fun(type)(nr)
+  }
+  if (is.function(.trend)) {
+  }
 
   .call <- match.call()
+
+  # TODO handle index in spec
+  # TODO sort out which arguments need a .
 
   if (missing(.formula)) {
     nms <- names(.data)
@@ -66,7 +105,8 @@ spec <- function(.data, .formula, .endo_lags = 2, .exo_lags = 2) {
 
   .terms <- terms.formula(.formula)
   has_intercept <- rlang::as_logical(attr(.terms, "intercept"))
-  has_trend <- "trend" %in% attr(.terms, "term.labels")
+  has_trend <- if (is.null(.trend)) TRUE else FALSE
+    #"trend" %in% attr(.terms, "term.labels")
 
   lhs <- model_response(.data, .formula)
   endo_varnames <- names(lhs)
@@ -101,7 +141,7 @@ spec <- function(.data, .formula, .endo_lags = 2, .exo_lags = 2) {
   }
 
   structure(
-    dplyr::lst(
+    list(
       lhs = lhs,
       rhs = rhs,
       lhs_lags = lhs_lags,
@@ -119,8 +159,9 @@ spec <- function(.data, .formula, .endo_lags = 2, .exo_lags = 2) {
   )
 }
 
+#' @importFrom crayon cyan
 #' @importFrom stringr str_replace
-print.spec <- function(x) {
+print.spec <- function(x, ...) {
 
 
   cat(grey("## Model Specification\n"))
@@ -138,7 +179,7 @@ print.spec <- function(x) {
 
   names_rhs <- names(x$rhs)
   if (x$intercept) {
-    cat(gold("Intercept, "))
+    cat(crayon::cyan("Intercept, "))
     names_rhs <- str_replace(names_rhs, "Intercept", "")
   }
 

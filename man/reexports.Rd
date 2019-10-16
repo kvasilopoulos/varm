@@ -5,6 +5,10 @@
 \alias{reexports}
 \alias{irf}
 \alias{fevd}
+\alias{hd}
+\alias{forecast}
+\alias{autoplot}
+\alias{autolayer}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -12,6 +16,8 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{vargenerics}{\code{\link[vargenerics]{irf}}, \code{\link[vargenerics]{fevd}}}
+  \item{ggplot2}{\code{\link[ggplot2]{autoplot}}, \code{\link[ggplot2]{autolayer}}}
+
+  \item{smgenerics}{\code{\link[smgenerics]{irf}}, \code{\link[smgenerics]{fevd}}, \code{\link[smgenerics]{hd}}, \code{\link[smgenerics]{forecast}}}
 }}
 

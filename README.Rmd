@@ -22,29 +22,48 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/kvasilopoulos/abvar/branch/master/graph/badge.svg)](https://codecov.io/gh/kvasilopoulos/abvar?branch=master)
 <!-- badges: end -->
 
-The goal of abvar is to ...
+## Introduction
+
+The goal of {abvar} is the estimation and identification of Vector Autoregressive (VAR) models. Still is a work in progess, any suggestion for what might be of interest is much appreciated.
+
+## Ideas on subroutines
+
+
+Defers the computation until specific point
+
+Naming: 
+ - `inst`
+ - `gen`
+ - `_`
+
+## Status
+- [ ] VAR
+  - [ ] VAR impulse response function (IRFs)
+    - [ ] Identification
+      - [ ] Reduce form
+      - [ ] Cholesky
+      - [ ] Long-run restrictions
+      - [ ] Sign restrictions
+        - [ ] Uhlig 
+        - [ ] Rubio Ramirez
+        - [ ] Fry Pagan
+      - [ ] Proxy
+        - [ ] Mertens and Ravn; Stock and Watson
+    - [ ] Confidence bands
+      - [ ] Asymptotic
+      - [ ] Monte Carlo
+      - [ ] Bootstrap
+      - [ ] Wild bootstrap 
+      - [ ] Block bootstrap
+- [ ] BVAR
 
 ## Installation
 
-You can install the released version of abvar from [CRAN](https://CRAN.R-project.org) with:
-
-``` r
-install.packages("abvar")
-```
-
-And the development version from [GitHub](https://github.com/) with:
+You can install the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("kvasilopoulos/abvar")
-```
-## Example
-
-This is a basic example which shows you how to solve a common problem:
-
-```{r example}
-library(abvar)
-## basic example code
 ```
 
 ---
