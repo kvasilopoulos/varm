@@ -42,7 +42,8 @@ Naming: - `inst` - `gen` - `_`
                   - [ ] Rubio Ramirez
                   - [ ] Fry Pagan
               - [ ] Proxy
-                  - [ ] Mertens and Ravn; Stock and Watson
+                  - [ ] Mertens and Ravn;
+                  - [ ] Stock and Watson
           - [ ] Confidence bands
               - [ ] Asymptotic
               - [ ] Monte Carlo

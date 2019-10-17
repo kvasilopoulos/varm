@@ -74,11 +74,14 @@ scale_shock <- function(type = c("se", "unit"), factor = 1) {
 #' @importFrom generics tidy
 tidy.irf_var_ls <- function(x) {
   irfs <- array_to_tbl(x$irfs)
+  boot_dist <- array_to_list(x$boot_irfs, margin = c(1, 2, 3)) %>%
+    enframe() %>% select(distr = value)
   low <- apply(x$boot_irfs, c(1,2,3), quantile, probs = 0.16) %>%
     array_to_tbl() %>% select(low = irf)
   high <- apply(x$boot_irfs, c(1,2,3), quantile, probs = 0.84) %>%
     array_to_tbl() %>% select(high = irf)
-  bind_cols(irfs, low, high)
+  bind_cols(irfs, low, high) %>%
+    bind_cols(boot_dist)
 }
 
 autoplot.irf_var_ls <- function(object, ...) {

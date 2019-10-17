@@ -11,13 +11,11 @@ rmnorm <- function(n = 1, mean = rep(0, d), varcov, sqrt = NULL) {
   drop(mean + t(matrix(rnorm(n * d), d, n)) %*% sqrt.varcov)
 }
 
-
 boot_var <- function(obj) {
   resids <- scale(obj$residuals)
-  boot_resids <- boot_wild_norm_inst(resids)
-  gen_var(obj$coefficients, innov = boot_resids, nsim = nrow(boot_resids))
+  boot_resids <- boot_inst(resids)
+  gen_var(obj$coefficients, innov = boot_resids, nrep = nrow(boot_resids))
 }
-
 
 #' Acoef <- var_ls(abvar::spec(econdata::sw2001[,-1], .endo_lags = 4))$coefficients
 #' tsDyn::VAR.sim(t(Acoef[-1,]), n = 200, lag = 4, include = "none")

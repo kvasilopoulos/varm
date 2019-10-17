@@ -8,9 +8,15 @@ array_to_tbl <- function(x) {
     impulse = nms,
     response =  nms,
     horizon = 1:dims[3])
-  grid_names %>%
+  as_tibble(grid_names) %>%
     add_column(irf = c(x)) %>% # c() to collapse dims of x
     arrange(impulse, response, horizon)
+}
+
+array_to_list <- function(x, margin = 3) {
+  out <- apply(x, margin, list) %>%
+    set_names(paste0("h", 1:length(.)))
+  map(out, ~ `class<-`(.x, glue("bt({dim(x)[4]})")))
 }
 
 # custom colors -----------------------------------------------------------
