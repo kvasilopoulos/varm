@@ -26,8 +26,10 @@ knitr::opts_chunk$set(
 
 The goal of {abvar} is the estimation and identification of Vector Autoregressive (VAR) models. Still is a work in progess, any suggestion for what might be of interest is much appreciated.
 
-## Ideas on subroutines
 
+irf -> array[response, impulse, horizon, n]
+
+## Ideas on subroutines
 
 Defers the computation until specific point
 
@@ -35,6 +37,7 @@ Naming:
  - `inst`
  - `gen`
  - `_`
+ - `impl`
 
 ## Status
 - [ ] VAR
@@ -48,7 +51,7 @@ Naming:
         - [ ] Rubio Ramirez
         - [ ] Fry Pagan
       - [ ] Proxy
-        - [ ] Mertens and Ravn; 
+        - [ ] Mertens and Ravn
         - [ ] Stock and Watson
     - [ ] Confidence bands
       - [ ] Asymptotic
@@ -57,6 +60,8 @@ Naming:
       - [ ] Wild bootstrap 
       - [ ] Block bootstrap
 - [ ] BVAR
+
+
 
 ## Installation
 

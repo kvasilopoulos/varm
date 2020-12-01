@@ -30,9 +30,12 @@ Remotes:
     kvasilopoulos/smgenerics
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 Suggests: 
     covr,
-    spelling
+    spelling,
+    testthat
 Language: en-US
 Roxygen: list(markdown = TRUE)
+Depends: 
+    R (>= 2.10)

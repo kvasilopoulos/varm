@@ -1,4 +1,4 @@
-boot_inst <- function(x) {
+boot_resample <- function(x) {
   nr <- NROW(x)
   boot_idx <- sample(1:nr, replace = TRUE)
   x[boot_idx, ]

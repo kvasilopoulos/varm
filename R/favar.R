@@ -1,26 +1,35 @@
-#'  function [fac,lam]=extract(data,k) extracts first k principal components from
-#'  t*n matrix data, loadings are normalized so that lam'lam/n=I, fac is t*k, lam is n*k
+#'  Extracts first k principal components from t x n matrix data, loadings
+#'  are normalized so that lam'lam/n=I, fac is t x k, lam is n x k
 #' @export
 #' @param .data data from which the factors should be extracted
 #' @param nfactors number of factors that are going to be extracted
 #' @return matrix with the extracted factors
 #'
-#' .data = econdata::bbe2005[,-1]
-factor_extract <- function(.data, nfactors = 2) {
-  dtm <- as.matrix(.data)
-  # nc <- ncol(dtm)
-  nr <- nrow(dtm)
-  xx <- crossprod(dtm)
-  eig <- eigen(xx)
-  eigenval <- eig$values
-  idx <- sort(diag(eigenval))
-  eigenvec <- eig$vectors
-  evc <- matrix(NA, nr, nr)
-  for (i in 1:nr) {
-    evc[,i] <- eigenvec[, idx[i]]
-  }
-  lambda <- sqrt(nr) * eigenvec[, 1:nfactors, drop = FALSE]
-  fac <-  dtm %*% lambda / nr
+#' factordata = econdata::bbe2005[,-1]
+factor_extract <- function(factordata, no_factors = 2) {
+  # dtm <- as.matrix(.data)
+  # # nc <- ncol(dtm)
+  # nr <- nrow(dtm)
+  # xx <- crossprod(dtm)
+  # eig <- eigen(xx)
+  # eigenval <- eig$values
+  # idx <- sort(diag(eigenval))
+  # eigenvec <- eig$vectors
+  # evc <- matrix(NA, nr, nr)
+  # for (i in 1:nr) {
+  #   evc[,i] <- eigenvec[, idx[i]]
+  # }
+  # lambda <- sqrt(nr) * eigenvec[, 1:nfactors, drop = FALSE]
+  # fac <-  dtm %*% lambda / nr
+
+  factordata <- as.matrix(factordata)
+  nv <- ncol(factordata) # number of variables in factordata
+  nObs <- nrow(factordata)
+  x.x <- t(factordata) %*% factordata
+  evectors <- eigen(x.x)$vectors
+  ret.evectors <- sqrt(nObs)*evectors[,1:no_factors]
+
+  fac <- factordata %*% ret.evectors/nObs
 }
 
 #' @export
@@ -49,7 +58,7 @@ draw_posterior_normal <- function(li_prvar, fy, xy, K, P, N, Sigma, L, alpha, be
     Sigma[ii, ii] <- stats::rgamma(1, shape = sh, scale = sc)
   }
 
-  return(list(L = L, Sigma = Sigma))
+  list(L = L, Sigma = Sigma)
 }
 
 #' @export
@@ -94,7 +103,7 @@ draw_posterior_ssvs <- function(fy, xy, K, P, N, Sigma, tau2, c2, gammam, alpha,
     }
   }
 
-  return(list(Sigma = Sigma, L = L, gammam = gammam))
+  list(Sigma = Sigma, L = L, gammam = gammam)
 }
 
 #' @title linear regression using single value decomposition
@@ -105,8 +114,7 @@ olssvd <- function(y, ly) {
   duv <- svd(t(ly) %*% ly)
   x_inv <- duv$v %*% diag(1 / duv$d) %*% t(duv$u)
   x_pseudo_inv <- x_inv %*% t(ly)
-  b <- x_pseudo_inv %*% y
-  return(b)
+  x_pseudo_inv %*% y
 }
 
 #' @export
@@ -159,7 +167,7 @@ favar <- function(data, priorObj, factordata, nreps, burnin, alpha, beta, tau2,
 
   # extract factors and join series
 
-  fac <- get_factors(factordata, no_factors)
+  fac <- factor_extract(factordata, no_factors)
   xy <- cbind(data, factordata)
   fy <- cbind(data, fac)
 
@@ -282,7 +290,7 @@ favar <- function(data, priorObj, factordata, nreps, burnin, alpha, beta, tau2,
   )
 
   # Return information
-  ret_object <- structure(list(
+  structure(list(
     general_info = general_information,
     data_info = data_info,
     factordata_info = factordata_info,
@@ -290,8 +298,6 @@ favar <- function(data, priorObj, factordata, nreps, burnin, alpha, beta, tau2,
   ),
   class = "favar"
   )
-
-  return(ret_object)
 }
 
 #' @export

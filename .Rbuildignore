@@ -8,3 +8,4 @@
 ^\.github$
 ^inst\\notes-var\.Rmd$
 ^notes$
+^data-raw$

@@ -4,8 +4,7 @@
 \alias{draw_posterior_ssvs}
 \title{Draw posterior for measurement equation using an SSVS-prior}
 \usage{
-draw_posterior_ssvs(fy, xy, K, P, N, Sigma, tau2, c2, gammam, alpha, beta,
-  L)
+draw_posterior_ssvs(fy, xy, K, P, N, Sigma, tau2, c2, gammam, alpha, beta, L)
 }
 \arguments{
 \item{fy}{'independent' variables}

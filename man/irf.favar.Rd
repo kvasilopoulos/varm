@@ -4,8 +4,7 @@
 \alias{irf.favar}
 \title{Function to calculate irfs}
 \usage{
-\method{irf}{favar}(obj, id_obj, nhor = 12, ncores = 1,
-  irfquantiles = c(0.05, 0.95), ...)
+\method{irf}{favar}(obj, id_obj, nhor = 12, ncores = 1, irfquantiles = c(0.05, 0.95), ...)
 }
 \arguments{
 \item{obj}{an S3 object of class favar}

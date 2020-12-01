@@ -2,10 +2,10 @@
 % Please edit documentation in R/favar.R
 \name{factor_extract}
 \alias{factor_extract}
-\title{function \link{fac,lam}=extract(data,k) extracts first k principal components from
-t\emph{n matrix data, loadings are normalized so that lam'lam/n=I, fac is t}k, lam is n*k}
+\title{Extracts first k principal components from t x n matrix data, loadings
+are normalized so that lam'lam/n=I, fac is t x k, lam is n x k}
 \usage{
-factor_extract(.data, nfactors = 2)
+factor_extract(factordata, no_factors = 2)
 }
 \arguments{
 \item{.data}{data from which the factors should be extracted}
@@ -15,9 +15,9 @@ factor_extract(.data, nfactors = 2)
 \value{
 matrix with the extracted factors
 
-.data = econdata::bbe2005\link{,-1}
+factordata = econdata::bbe2005\link{,-1}
 }
 \description{
-function \link{fac,lam}=extract(data,k) extracts first k principal components from
-t\emph{n matrix data, loadings are normalized so that lam'lam/n=I, fac is t}k, lam is n*k
+Extracts first k principal components from t x n matrix data, loadings
+are normalized so that lam'lam/n=I, fac is t x k, lam is n x k
 }

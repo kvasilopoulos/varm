@@ -4,8 +4,21 @@
 \alias{favar}
 \title{Factor-Augmented Vector Autoregression}
 \usage{
-favar(data, priorObj, factordata, nreps, burnin, alpha, beta, tau2, c2,
-  li_prvar, priorm, stabletest = TRUE, nthin = 1)
+favar(
+  data,
+  priorObj,
+  factordata,
+  nreps,
+  burnin,
+  alpha,
+  beta,
+  tau2,
+  c2,
+  li_prvar,
+  priorm,
+  stabletest = TRUE,
+  nthin = 1
+)
 }
 \arguments{
 \item{data}{data that is not going to be reduced to factors}
