@@ -24,7 +24,7 @@ tbl_lag <- function(x, dimension = 1) {
   reduce(temp, bind_cols)
 }
 
-
+#' @importFrom stats embed
 mat_lag <- function(x, lags = 1) {
   dt <- as.matrix(x)
   nc <- ncol(dt)

@@ -1,5 +1,5 @@
 #' @export
-psummary <- function(x, ...) {
+psummary <- function(object, ...) {
   UseMethod("psummary")
 }
 

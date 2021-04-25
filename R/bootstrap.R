@@ -4,19 +4,19 @@ boot_resample <- function(x) {
   x[boot_idx, ]
 }
 
-boot_wild_rad_inst <- function(x) {
+boot_wild_rad <- function(x) {
   nr <- NROW(x)
   rad <- sample(c(-1, 1), nr, replace = TRUE)
   x*rad
 }
 
-boot_wild_norm_inst <- function(x) {
+boot_wild_norm <- function(x) {
   nr <- NROW(x)
   gauss <- rnorm(nr)
   x*gauss
 }
 
-boot_mammen_inst <- function(x) {
+boot_mammen <- function(x) {
   nr <- NROW(x)
   mam <- sample(
     x = c(-(sqrt(5) - 1)/2, (sqrt(5) + 1)/2),

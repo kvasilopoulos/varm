@@ -30,3 +30,10 @@ ggplot2::autolayer
 
 
 
+
+# generics ----------------------------------------------------------------
+
+
+#' @importFrom generics tidy
+#' @export
+generics::tidy

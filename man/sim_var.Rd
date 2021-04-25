@@ -11,7 +11,7 @@ Simulate VAR
 }
 \examples{
 
-obj <- varm(abvar::spec(econdata::sw2001[,-1], .endo_lags = 4))
+obj <- varm(varm::spec(econdata::sw2001[,-1], .endo_lags = 4))
 Acoef <- coefficients(obj)
 set.seed(123)
 dyn <- tsDyn:::VAR.sim(t(Acoef), n = 200, lag = 4, include = "const")
@@ -22,6 +22,9 @@ plot.ts(ab)
 waldo::compare(dyn, ab)
 
 
+}
+\references{
+\url{https://github.com/MatthieuStigler/tsDyn/blob/a6aa2ebc041e448b3eb8598ffd117a83cfe316e5/tsDyn/R/VAR.sim.R}
 }
 \seealso{
 mlvar::simulateVAR  tsDyn::VAR.sim

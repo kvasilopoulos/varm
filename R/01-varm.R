@@ -110,20 +110,21 @@ coef.varm <- function(object, ...) {
 }
 
 #' @export
-print.varm <- function(x, digits = getOption("digits") - 3) {
+print.varm <- function(x, digits = getOption("digits") - 3, ...) {
   cli::cat_rule(left = "varm()")
   cli::cat_line()
   coefx <- coef(x) %>%
     strip_attributes()
   format(coefx, digits = digits) %>%
-    print(quote = FALSE)
+    print(quote = FALSE, ...)
 }
 
 
 #' @export
+#' @importFrom stats coef coefficients printCoefmat pt qt quantile resid residuals runif sd
 summary.varm <- function(x, digits = max(3L, getOption("digits") - 3L),
                            signif.stars = getOption("show.signif.stars"),
-                           signif.legend = signif.stars) {
+                           signif.legend = signif.stars, ...) {
   coefx <- coef(x) %>%
     strip_attributes()
   nms <- colnames(coefx)

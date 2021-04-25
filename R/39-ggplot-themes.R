@@ -1,5 +1,7 @@
 
-theme_abvar <- function() {
+# https://github.com/jrnold/ggthemes/blob/master/R
+
+theme_varm <- function() {
   theme(
 
   )
@@ -25,6 +27,8 @@ theme_default <- function(base_size = 11, base_family = "", base_line_size = bas
     )
 }
 
+#' @importFrom ggplot2 %+replace% theme_grey theme element_blank element_text rel
+#' element_rect element_line
 theme_basic <- function(base_size = 11, base_family = "", base_line_size = base_size/22,
                         base_rect_size = base_size/22) {
   theme_grey(

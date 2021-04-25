@@ -1,4 +1,4 @@
-^abvar\.Rproj$
+^varm\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^\.travis\.yml$
@@ -9,3 +9,7 @@
 ^inst\\notes-var\.Rmd$
 ^notes$
 ^data-raw$
+^examples$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

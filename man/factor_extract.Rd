@@ -14,8 +14,6 @@ factor_extract(factordata, no_factors = 2)
 }
 \value{
 matrix with the extracted factors
-
-factordata = econdata::bbe2005\link{,-1}
 }
 \description{
 Extracts first k principal components from t x n matrix data, loadings

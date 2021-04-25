@@ -1,3 +1,4 @@
+#' @importFrom rlang abort
 abort_glue <- function(..., .sep = "", .envir = parent.frame(),
                        call. = FALSE, .domain = NULL) {
   abort(

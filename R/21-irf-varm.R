@@ -1,6 +1,6 @@
 #' @export
-vcov.varm <- function(x, ...) {
-  x$vcov
+vcov.varm <- function(object, ...) {
+  object$vcov
 }
 
 #' @export
@@ -10,10 +10,12 @@ irf_boot <- function(x, ...) {
 
 
 
-#' @export
-#' @examples
+#' Impulse response functions
 #'
-#' spec(dt)$call
+#'   @export
+#' @examples
+#' \dontrun{
+#'
 #'
 #'
 #' irf(obj_dt, nboot = 100, horizon = 20, id = id_chol(), shock = scale_shock("se")) %>% str()
@@ -24,9 +26,9 @@ irf_boot <- function(x, ...) {
 #' autoplot(irf(obj_dt, nboot = 100, horizon = 20, id = id_chol(), shock = scale_shock("unit")))
 #'
 #'
-#'
+#'}
 irf.varm <- function(object, horizon = 12, nboot = 100, boot =  boot_spec(fn = boot_inst, nboot = 500),
-                     id = id_none(), shock = scale_shock(), ...) {
+                     id = id_none(), shock = shock_scale(), ...) {
 
   A <- comp(coefficients(object))
   B <- object$vcov
@@ -45,7 +47,9 @@ irf.varm <- function(object, horizon = 12, nboot = 100, boot =  boot_spec(fn = b
   )
 }
 
-
+#' Boostrap irfs
+#'
+#'
 #' @export
 #' @examples
 #'
@@ -58,14 +62,13 @@ irf_boot.varm <- function(obj, h, nb, id, shock, ...) {
   for (i in 1:nb) {
 
     boot_Y <- boot_var(obj)
-    boot_obj <- varm(abvar::spec(as.data.frame(boot_Y), .endo_lags = p))
+    boot_obj <- varm(varm::spec(as.data.frame(boot_Y), .endo_lags = p))
 
     A <- comp(coefficients(boot_obj))
     B <- boot_obj$vcov
 
     Bid <- id(B)
     Bscale <- shock(Bid)
-    # return(list(B, Bid, Bscale))
 
     bty[,,,i] <- irf_(A, Bscale, h = h)
   }
@@ -76,7 +79,7 @@ irf_boot.varm <- function(obj, h, nb, id, shock, ...) {
 
 #' Impulse Response Function Algorithm 1
 #'
-#' @import expm expm
+#' @importFrom expm expm %^%
 #' @examples
 #'
 #'
@@ -97,10 +100,55 @@ irf_ <- function(A, B, h) {
   out
 }
 
+# fevd --------------------------------------------------------------------
+
+#' @export
+fevd.varm <- function(object, horizon = 12, id = id_none(), shock = shock_scale(), ...) {
+
+  A <- comp(coefficients(object))
+  B <- object$vcov
+
+  Bid <- id(B)
+  Bscale <- shock(Bid)
+
+  fevds <- fevd_(A, Bscale, h = horizon)
+
+  structure(
+    list(
+      fevds =
+    ),
+    class = append("fevd_varm", class(fevds))
+  )
+
+}
+
+fevd_ <- function(A, B, h) {
+
+  K <- get_attr(A, "K")
+  p <- get_attr(A, "p")
+  nms <- rownames(B)
+  # J <- cbind(eye(K), zeros(K, K*(p - 1)))
+  J <- eye(K)
+
+  fevd <- matrix(0, K^2, h + 1)
+  for (i in 0:h) {
+    temp <- matrix(A^i %*% B, nrow = K^2, 1)
+    fevd[, i + 1] <- fevd[, i + 1] + temp^2
+  }
+  sumfevd <- sum(fevd)
+
+  VC <- zeros(K)
+  for (j in 1:K) {
+    VC[j, ] <- fevd[, ] / sumfevd
+  }
+  VC
+}
+
+
 # Scale -------------------------------------------------------------------
 
 
-scale_shock <- function(type = c("se", "unit"), size = 1) {
+shock_scale <- function(type = c("se", "unit"), size = 1) {
   type <- match.arg(type)
   if (type == "se") {
     out <- function(x) x * size

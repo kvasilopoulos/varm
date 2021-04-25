@@ -4,14 +4,14 @@
 #'
 irf_partial <- function(A, B, K, p, h) {
 
-  irs <- matrix(0, irhor + p, n, dimnames = list(NULL, colnames(model$matY)))
-  irs[p + 1, ] <- gamma / gamma[1]
-  for (jj in 2:irhor) {
-    lvars <- c(t(irs[(p + jj - 1):jj, ])) # collapse to vector
-    irs[p + jj, ] <- lvars %*% bet[-1, ] # remove constant
-  }
-  irs <- irs[-c(1:p), ]
-  irs
+  # irs <- matrix(0, h + p, n, dimnames = list(NULL, colnames(model$matY)))
+  # irs[p + 1, ] <- gamma / gamma[1]
+  # for (jj in 2:h) {
+  #   lvars <- c(t(irs[(p + jj - 1):jj, ])) # collapse to vector
+  #   irs[p + jj, ] <- lvars %*% bet[-1, ] # remove constant
+  # }
+  # irs <- irs[-c(1:p), ]
+  # irs
 }
 
 # se <- function() {}

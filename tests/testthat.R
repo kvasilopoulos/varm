@@ -1,4 +1,4 @@
 library(testthat)
-library(abvar)
+library(varm)
 
-test_check("abvar")
+test_check("varm")

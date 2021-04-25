@@ -13,8 +13,9 @@ stable <- function(x) {
 
 #' @export
 #' @importFrom ggplot2 ggplot geom_path geom_point geom_segment coord_equal labs
-#' @importFrom ggplot2 scale_x_continuous scale_y_continuous
-autoplot.stability <- function(x) {
+#' @importFrom ggplot2 scale_x_continuous scale_y_continuous theme_classic
+autoplot.stability <- function(x, ...) {
+
   center <- c(0,0)
   diameter <- 2
   r <- diameter / 2

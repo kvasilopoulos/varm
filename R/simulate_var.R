@@ -12,8 +12,12 @@ rmnorm <- function(n = 1, mean = rep(0, d), varcov, sqrt = NULL) {
 }
 
 
+
+#' Bootstrap `varm` model
+#'
+#'
 boot_var <- function(obj, boot_fn = boot_resample) {
-  resids <- base::scale(obj$residuals)
+  resids <- base::scale(residuals(obj))
   boot_resids <- boot_fn(resids)
   sim_var(coefficients(obj), innov = boot_resids, nrep = nrow(boot_resids))
 }
@@ -23,12 +27,13 @@ boot_var <- function(obj, boot_fn = boot_resample) {
 #' Simulate VAR
 #'
 #'
-#' @referencess \url{https://github.com/MatthieuStigler/tsDyn/blob/a6aa2ebc041e448b3eb8598ffd117a83cfe316e5/tsDyn/R/VAR.sim.R}
+#' @references \url{https://github.com/MatthieuStigler/tsDyn/blob/a6aa2ebc041e448b3eb8598ffd117a83cfe316e5/tsDyn/R/VAR.sim.R}
 #'
 #' @seealso mlvar::simulateVAR  tsDyn::VAR.sim
+#' @export
 #' @examples
 #'
-#' obj <- varm(abvar::spec(econdata::sw2001[,-1], .endo_lags = 4))
+#' obj <- varm(varm::spec(econdata::sw2001[,-1], .endo_lags = 4))
 #' Acoef <- coefficients(obj)
 #' set.seed(123)
 #' dyn <- tsDyn:::VAR.sim(t(Acoef), n = 200, lag = 4, include = "const")

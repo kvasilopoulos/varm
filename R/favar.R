@@ -1,11 +1,15 @@
+# factordata = econdata::bbe2005[,-1]
+
 #'  Extracts first k principal components from t x n matrix data, loadings
 #'  are normalized so that lam'lam/n=I, fac is t x k, lam is n x k
+#'
 #' @export
 #' @param .data data from which the factors should be extracted
 #' @param nfactors number of factors that are going to be extracted
 #' @return matrix with the extracted factors
 #'
-#' factordata = econdata::bbe2005[,-1]
+#'
+#'
 factor_extract <- function(factordata, no_factors = 2) {
   # dtm <- as.matrix(.data)
   # # nc <- ncol(dtm)
@@ -310,9 +314,10 @@ favar <- function(data, priorObj, factordata, nreps, burnin, alpha, beta, tau2,
 #' @param ... currently not used
 #'
 #' @return returns an S3-object of the class fvirf
-irf.favar <- function(obj, id_obj, nhor = 12, ncores = 1, irfquantiles = c(0.05, 0.95), ...) {
+irf.favar <- function(x, id_obj, nhor = 12, ncores = 1, irfquantiles = c(0.05, 0.95), ...) {
 
   # Preliminaries
+  obj <- x
   intercept <- obj$general_info$intercept
   Betadraws <- obj$mcmc_draws$Alpha
   Sigmadraws <- obj$mcmc_draws$Sigma

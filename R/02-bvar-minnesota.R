@@ -1,10 +1,8 @@
 bvar_minn <- function(Yraw, p = 4, nsave = 10000, nburn = 0) {
 
   nms <- colnames(Yraw)
-  mats <-  Yraw %>%
-    spec(.endo_lags = p)
-  ols_dat <- mats %>%
-    var_ls()
+  mats <- spec(Yraw, .endo_lags = p)
+  ols_dat <- varm(mats)
   ntot <- nsave + nburn
   Traw <- NROW(Yraw)
   Ylag <- as.matrix(mats$lhs_lags)
@@ -139,7 +137,7 @@ bvar_minn <- function(Yraw, p = 4, nsave = 10000, nburn = 0) {
 
 
 #' @export
-irf.bvar_minn <- function(x, nstep = 20) {
+irf.bvar_minn <- function(x, nstep = 20, ...) {
   # irf ---------------------------------------------------------------------
 
   M <- x$M
@@ -177,13 +175,13 @@ irf.bvar_minn <- function(x, nstep = 20) {
 }
 
 #' @export
-autoplot.irf_bvar_minn <- function(x) {
+autoplot.irf_bvar_minn <- function(x, ...) {
   x %>%
     array_to_tbl() %>%
     ggplot(aes(horizon, irf)) +
     geom_line() +
     facet_wrap(response ~impulse, scales = "free_y") +
-    theme_abvar()
+    theme_default()
 
 }
 

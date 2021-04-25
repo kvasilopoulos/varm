@@ -9,6 +9,7 @@
 \alias{forecast}
 \alias{autoplot}
 \alias{autolayer}
+\alias{tidy}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -16,6 +17,8 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
+  \item{generics}{\code{\link[generics]{tidy}}}
+
   \item{ggplot2}{\code{\link[ggplot2]{autolayer}}, \code{\link[ggplot2]{autoplot}}}
 
   \item{smgenerics}{\code{\link[smgenerics]{fevd}}, \code{\link[smgenerics]{forecast}}, \code{\link[smgenerics]{hd}}, \code{\link[smgenerics]{irf}}}

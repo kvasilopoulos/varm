@@ -1,23 +1,5 @@
 
-#' 3d array into tibble
-#' @importFrom tidyr expand_grid
-array_to_tbl <- function(x) {
-  dims <- dim(x)
-  nms <- rownames(x)
-  grid_names <- expand.grid(
-    impulse = nms,
-    response =  nms,
-    horizon = 1:dims[3])
-  as_tibble(grid_names) %>%
-    add_column(irf = c(x)) %>% # c() to collapse dims of x
-    arrange(impulse, response, horizon)
-}
 
-array_to_list <- function(x, margin = 3) {
-  out <- apply(x, margin, list) %>%
-    set_names(paste0("h", 1:length(.)))
-  map(out, ~ `class<-`(.x, glue("bt({dim(x)[4]})")))
-}
 
 # custom colors -----------------------------------------------------------
 
@@ -54,4 +36,39 @@ make_dummy_if <- function(condition) {
 }
 
 
+# class and attrs ---------------------------------------------------------
 
+set_class <- function(x, nm) {
+  class(x) <- nm
+  x
+}
+
+add_class <- function(x, ...) {
+  class(x) <- append(c(...), class(x))
+  x
+}
+
+set_attrs <- function(x, ...) {
+  attrs <- dots_list(...)
+  attributes(x) <- attrs
+  x
+}
+
+#' @importFrom rlang dots_list
+add_attr <- function(x,  ...) {
+  attrs <- dots_list(...)
+  attributes(x) <- c(attributes(x), attrs)
+  x
+}
+
+inherit_attrs <- function(x, y) {
+
+  attr_x <- attributes(x) %>% names() %||% NA_character_
+  attr_y <- attributes(y) %>% names() %||% NA_character_
+
+  remove_x <- which(attr_x %in% attr_y)
+  attributes(y)[remove_x] <- NULL # remove duplicates
+
+  attributes(x) <- c(attributes(x), attributes(y))
+  x
+}
