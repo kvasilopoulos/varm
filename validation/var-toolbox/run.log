@@ -1,0 +1,94 @@
+
+== A. estimation ==
+BQ(p=8)                            coef vs ML normal-eq (cond=1e3)    1.199e-14 (tol 1e-05) PASS 
+BQ(p=8)                            coef vs QR solve                   4.42e-14 (tol 1e-08) PASS 
+BQ(p=8)                            ML normal-eq vs QR (ML's own error)    4.147e-14 (tol 1e-05) PASS 
+BQ(p=8)                            Sigma (dof-corrected)              1.11e-16 (tol 1e-10) PASS 
+BQ(p=8)                            residuals                          2.92e-14 (tol 1e-05) PASS 
+BQ(p=8)                            max eigenvalue                    2.887e-15 (tol 1e-06) PASS 
+Uhlig(p=12)                        coef vs ML normal-eq (cond=1e10)    7.875e-07 (tol 1e-05) PASS 
+Uhlig(p=12)                        coef vs QR solve                  3.047e-06 (tol 1e-05) PASS 
+Uhlig(p=12)                        ML normal-eq vs QR (ML's own error)    3.834e-06 (tol 1e-05) PASS 
+Uhlig(p=12)                        Sigma (dof-corrected)              2.27e-14 (tol 1e-10) PASS 
+Uhlig(p=12)                        residuals                         1.657e-07 (tol 1e-05) PASS 
+Uhlig(p=12)                        max eigenvalue                    1.146e-08 (tol 1e-06) PASS 
+GK(p=12)                           coef vs ML normal-eq (cond=1e9)    5.296e-07 (tol 1e-05) PASS 
+GK(p=12)                           coef vs QR solve                  1.706e-06 (tol 1e-05) PASS 
+GK(p=12)                           ML normal-eq vs QR (ML's own error)     1.74e-06 (tol 1e-05) PASS 
+GK(p=12)                           Sigma (dof-corrected)             2.026e-15 (tol 1e-10) PASS 
+GK(p=12)                           residuals                         1.359e-08 (tol 1e-05) PASS 
+GK(p=12)                           max eigenvalue                    4.028e-10 (tol 1e-06) PASS 
+BQ const+trend p=4                 lag coef                          3.497e-14 (tol 1e-08) PASS 
+BQ const+trend p=4                 trend slope                       1.008e-17 (tol 1e-08) PASS 
+BQ const+trend p=4                 intercept (varm trend=1..T vs ML 1..Te)     0.002274 (tol 1e-08) FAIL <- expected shift = p*slope
+BQ const+trend p=4                 c_varm - c_ML + p*slope (should be 0)    6.948e-16 (tol 1e-08) PASS 
+BQ const+trend p=4                 residuals                         2.132e-14 (tol 1e-08) PASS 
+
+== B. Cholesky IRF ==
+GK chol IRF 1sd                    max|diff| vs ml (wold)            2.057e-08 (tol 1e-06) PASS 
+GK chol IRF 1sd                    max|diff| vs ml (companion)       2.057e-08 (tol 1e-06) PASS 
+GK chol IRF unit (impact=1)        shock gs1 (normalise)             1.153e-08 (tol 1e-06) PASS 
+GK chol, order=c(3,1,4,2)          vs ML on permuted data            1.907e-09 (tol 1e-08) PASS 
+Uhlig chol IRF (6 var,p=12)        max|diff|                         2.767e-07 (tol 1e-05) PASS 
+
+== C. long-run ==
+BQ long-run IRF                    max|diff| vs ml                   3.011e-14 (tol 1e-08) PASS 
+BQ long-run IRF                    impact matrix                     3.011e-14 (tol 1e-08) PASS 
+BQ long-run                        LR matrix upper elem (should be 0)    5.437e-16 (tol 1e-10) PASS 
+BQ long-run                        B B' - Sigma                      1.388e-17 (tol 1e-10) PASS 
+
+== D. FEVD ==
+GK chol FEVD                       max|diff| (percentage points)     1.371e-05 (tol 1e-03) PASS 
+BQ long-run FEVD                   max|diff| (percentage points)     3.268e-12 (tol 1e-06) PASS 
+BQ long-run FEVD                   sum over shocks == 1               1.11e-16 (tol 1e-10) PASS 
+
+== E. HD ==
+GK chol HD shocks                  contributions max|diff|            1.74e-05 (tol 1e-03) PASS 
+GK chol HD                         baseline vs ML init+const         1.449e-05 (tol 1e-03) PASS 
+BQ long-run HD shocks              contributions max|diff|           1.466e-13 (tol 1e-06) PASS 
+
+== F. IV (GK) ==
+GK IV (zero-fill) vs ML NaN-drop   normalised IRF max|diff|            0.02111 (tol 1e-08) FAIL (ML drops NaN rows, centres; varm uses uncentred sum over full sample)
+GK IV                              gamma-direction cosine diff       0.0001226 (tol 1e-03) PASS 
+GK IV                              B1 (unit-var) vs ML Biv rel.diff       0.1741 (tol 5e-02) FAIL varm=0.2267,-5e-04,5e-04,0.1361 ML=0.1931,-4e-04,5e-04,0.1119
+GK IV, instrument demeaned         normalised IRF max|diff|          2.533e-08 (tol 1e-06) PASS 
+GK id_proxy vs varm_proxy          max|diff|                         5.551e-17 (tol 1e-10) PASS 
+GK IV FEVD (h=48, gs1 from MP shock) ML % vs varm %                        82.91 (tol 1e+00) FAIL ML=17.09% varm=100.00%
+GK IV FEVD recomputed w/ total variance varm-IRF based vs ML (pp, h=48, 4 vars)        1.104 (tol 6e+00) PASS diff only from B1 scale/centring; ML=17.09,7.57,10.3,14.51
+  normalised-IRF diff as share of max|IRF|: 0.0160
+GK IV, flipped instrument          normalised IRF unchanged                  0 (tol 1e-10) PASS 
+
+== G. bootstrap (BQ, long-run, p=8, 3000 draws each) ==
+BQ long-run bootstrap 95%          mean band-width ratio varm/ML       0.07489 (tol 2e-02) FAIL ratio=1.075
+BQ long-run bootstrap              draw-mean IRF max|diff| (in sd units)        0.614 (tol 2e-01) FAIL 
+  worst mean-diff cell [h,resp,shock]: 1 1 2 
+BQ long-run bootstrap + ML port with varm's dof rescale band-width ratio varm/ML            0.01985 (tol 2e-02) PASS ratio=0.980
+BQ long-run bootstrap + dof rescale draw-mean IRF max|diff| (sd units)      0.08299 (tol 2e-01) PASS 
+  dof-rescale factor sqrt(Te/(Te-m)) used by varm bootstrap: 1.061539 
+GK chol wild bootstrap             band-width ratio varm/ML            0.06327 (tol 5e-02) FAIL ratio=1.063
+quantile rule (N=3000)             type 5 (MATLAB) vs type 7 (varm) band end, sd units      0.02892 (tol 5e-02) PASS convention
+  explosive/unit-root bootstrap draws kept by varm (GK p=12): 0.0% (MATLAB would reject them)
+  same for BQ p=8: 0.0%
+
+== H. sign restrictions (Uhlig data, p=12, 6 vars, sr_hor=6, point estimate) ==
+Uhlig sign: acceptance             ML accept/rot vs varm accept         0.2908 (tol 1e+00) PASS ML=0.3513 varm=0.0605 (ML scans all columns, varm tests column 1 only)
+Uhlig sign: median IRF             max|diff| in rotation-sd units       0.1243 (tol 1e-01) PASS 
+Uhlig sign: 16/84% bands           max|diff| in rotation-sd units      0.09718 (tol 2e-01) PASS 
+Uhlig sign: 2.5/97.5% of rotations max|diff| in rotation-sd units       0.3405 (tol 4e-01) PASS 
+Uhlig sign: restrictions hold in draws violations (of 200)                       0 (tol 0e+00) PASS 
+
+== I. parameter-uncertainty draws ==
+BQ draws: Sigma[1,1] mean          MATLAB-style vs varm mc rel.diff     0.004107 (tol 3e-02) PASS 
+BQ draws: Sigma[1,1] sd            ratio varm/ML                       0.04454 (tol 8e-02) PASS ratio=1.045 (ML df=T, varm df=T-m; theory 1.062)
+
+== J. LP ==
+LP-OLS (Primer)                    beta max|diff|                    3.678e-16 (tol 1e-08) PASS 
+LP-OLS (Primer)                    NW se: varm default (L=h+1) vs ML (L=h)      0.01696 (tol 1e-08) FAIL (bandwidth convention)
+LP-OLS (Primer)                    NW se with nw_lag=h               2.776e-16 (tol 1e-08) PASS 
+LP-IV (GK, FF4 -> gs1)             beta max|diff|                    2.491e-10 (tol 1e-08) PASS 
+LP-IV (GK, FF4 -> gs1)             se max|diff| (nw_lag=h)           1.385e-09 (tol 1e-08) PASS 
+
+Summary: 8 56 
+
+FAIL PASS 
+   8   56 

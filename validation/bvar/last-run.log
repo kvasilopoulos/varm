@@ -1,0 +1,145 @@
+=== 01_minnesota
+data: Data.mat, T = 300  K = 3
+[PASS] T1 BVAR_ ML == exact NIW ML of its dummy prior (p=2)  BVAR_= 3700.694283  exact= 3700.694283
+[PASS] T1 BVAR_ ML == exact NIW ML of its dummy prior (p=4)  BVAR_= 3715.167565  exact= 3715.167565
+   p=2 h(tau,decay,lambda,mu,omega)=3,0.5,5,2,2        BVAR_=3700.6943 varm=3700.6795 | diff(ybar=y[1:p])=-0.01475  diff(ybar=y[p+1:2p])=-4.30e-08
+   p=2 h(tau,decay,lambda,mu,omega)=1,0.5,5,2,2        BVAR_=3691.4868 varm=3691.4722 | diff(ybar=y[1:p])=-0.01466  diff(ybar=y[p+1:2p])=-1.64e-07
+   p=2 h(tau,decay,lambda,mu,omega)=10,1,1,0.5,2       BVAR_=3707.8820 varm=3707.8702 | diff(ybar=y[1:p])=-0.01180  diff(ybar=y[p+1:2p])=-5.34e-07
+   p=2 h(tau,decay,lambda,mu,omega)=0.3,2,20,5,2       BVAR_=3668.9144 varm=3668.8914 | diff(ybar=y[1:p])=-0.02302  diff(ybar=y[p+1:2p])=-1.44e-05
+   p=2 h(tau,decay,lambda,mu,omega)=5,1,1,0.5,2        BVAR_=3708.1898 varm=3708.1786 | diff(ybar=y[1:p])=-0.01114  diff(ybar=y[p+1:2p])=-4.74e-07
+   p=4 h(tau,decay,lambda,mu,omega)=3,0.5,5,2,2        BVAR_=3715.1676 varm=3715.1605 | diff(ybar=y[1:p])=-0.00708  diff(ybar=y[p+1:2p])=-1.98e-07
+   p=4 h(tau,decay,lambda,mu,omega)=1,0.5,5,2,2        BVAR_=3689.5406 varm=3689.5336 | diff(ybar=y[1:p])=-0.00698  diff(ybar=y[p+1:2p])=+2.50e-07
+   p=4 h(tau,decay,lambda,mu,omega)=10,1,1,0.5,2       BVAR_=3714.3217 varm=3714.3129 | diff(ybar=y[1:p])=-0.00877  diff(ybar=y[p+1:2p])=+2.68e-07
+   p=4 h(tau,decay,lambda,mu,omega)=0.3,2,20,5,2       BVAR_=3691.8825 varm=3691.8732 | diff(ybar=y[1:p])=-0.00931  diff(ybar=y[p+1:2p])=+2.55e-05
+   p=4 h(tau,decay,lambda,mu,omega)=5,1,1,0.5,2        BVAR_=3721.2886 varm=3721.2817 | diff(ybar=y[1:p])=-0.00686  diff(ybar=y[p+1:2p])=+4.15e-07
+[FAIL] T2a varm ML == BVAR_ ML (BVAR_ convention ybar = mean(y[1:p]))  |diff| p=2 grid1 = 0.0148  (diary: nonzero, hyper-dependent, -0.007..-0.023)
+[PASS] T2b varm ML == BVAR_ ML if ybar = mean(y[p+1:2p]) (what varm uses)  |diff|= 4.3e-08
+[PASS] T3 varm logml insensitive to var (1e7 vs 1e12), i.e. matches BVAR_'s flat constant  diff= 9.81e-08
+[PASS] T4 (M=2, omega=1) ML differs hyper-dependently (different IW dof) -- convention difference  diff range: -8.189 .. -8.076
+[PASS] T5a posterior mean B-hat equal  max|diff|= 2.59e-08
+[PASS] T5b IW scale S equal  max rel diff= 2.98e-11
+[PASS] T5c posterior IW dof equal (varm nu vs BVAR_ posterior.df)  varm nu= 307  BVAR_ df= 307
+[PASS] T6 draw moments (means of B, Sigma) agree: |z| < 4.5  max|z| B= 1.22  Sigma= 1.88  var-ratio range 0.971..1.015
+   argmax (tau, lambda): BVAR_(ybar=y[p+1:2p])= 6.747 2.307  varm= 6.747 2.307  BVAR_(ybar=y[1:p])= 6.747 2.31 
+   max logML: BVAR_ shifted 3707.944  varm 3707.944  BVAR_ own 3707.948 
+[PASS] T7a ML maximisers agree when ybar matched (rel 1%)  
+[PASS] T7b ML maximiser with BVAR_'s own ybar convention differs from varm's by < 1%  max rel diff 0.00109
+   BVAR_=2293.3010 varm=2293.3111 diff(BVAR_ ybar)=+0.0100  diff(varm ybar)=+2.86e-08 ; ybar y[1:5]=5.43,4.789,4.099  y[6:10]=5.442,4.803,4.065
+[FAIL] T8a varm ML == BVAR_ ML with BVAR_'s ybar convention  diff= 0.01
+[PASS] T8b varm ML == BVAR_ ML with varm's ybar rows (confirms cause)  diff= 2.86e-08
+[FAIL] T9a soc = NULL, varm default var = 1e7 vs BVAR_ mu = 0: ML agree (1e-3)  diffs: 1.99, 4.88, 0.283, 7.92  (varm ML depends on var when soc is off)
+[PASS] T9b soc = NULL with var = 1e15 (flat constant) vs BVAR_ mu = 0 (ybar matched)  diffs: -2.21e-07, -1.08e-06, -7.5e-09, 8.95e-05
+[PASS] T10 posterior mean of Cholesky IRFs (36 cells) agree: max|z| < 4.5  max|z|= 1.92
+=== 02_dynamics
+data: DataGK.mat [logip logcpi gs1 ebp], T = 396  lags = 12  hor = 24 
+[PASS] P1 OLS coefficients B equal (tol 1e-6)  max|diff|= 6.07e-08  cond(X)= 123000
+[FAIL] P1b normal-equation residual max|X'(Y-XB)| < 1e-4 (QR/SVD reference gives 1e-7)  varm= 1.47  QR= 8.85e-08  -> varm OLS solves X'X (cond^2 loss)
+[PASS] P2 Sigma (dof-corrected) equal  max|diff|= 0
+[PASS] D1 Cholesky IRF (1 std) all vars/shocks/24 horizons  max|diff|= 1.17e-15
+[PASS] D2 unit-impact IRF (BVAR_ unit=0 vs varm normalise)  max|diff|= 4.88e-15
+[PASS] D3 FEVD at horizon 24 (percent; rows var, cols shock)  max|diff|= 1.78e-14  row sums: 100,100,100,100
+[PASS] F1 point forecast 12 steps  max|diff|= 0
+[PASS] H1 HD contributions of each shock (Te x K x K)  max|diff|= 3.82e-14
+[PASS] H2 BVAR_ HD adds up to data (its own tol check)  max|diff|= 1.29e-11
+[PASS] H3 deterministic+initial-condition part equals varm baseline  max|diff|= 1.29e-11
+   per-shock max|diff| BVAR_ vs varm long-run IRF: 8.88e-16 8.6e-16 1.47e-15 5.55e-16 
+[PASS] L1 Blanchard-Quah IRF equal (all 4 shocks)  max|diff|= 1.47e-15
+   raw Q(1,1) = -0.007443 (negative -> BVAR_ flips only that element)
+[FAIL] L2a BVAR_ long-run impact satisfies Q Q' = Sigma when Q(1,1)<0  max|QQ'-Sigma|= 0.00136
+[PASS] L2b varm long-run impact satisfies P P' = Sigma  max|PP'-Sigma|= 3.47e-18
+[FAIL] L2c long-run IRFs agree up to column sign (Q(1,1)<0 case)  max|diff|= 0.111 (disagreement is the BVAR_ one-element flip)
+[PASS] L3 varm: long-run matrix C(1)P is lower triangular  max|upper|= 1.23e-12
+[PASS] H4 HD with an orthogonal rotation of the Cholesky factor  max|diff|= 5.86e-14
+[PASS] F2a forecast draws: mean = point path (|z|<4.5)  max|z|= 2.36
+[PASS] F2b forecast draws: covariance of h-step errors equals theory (error in correlation units < 1.5%; MC se ~0.5%)  max rel err= 0.00701
+=== 03_proxy
+data: DataGK [gs1 logip logcpi ebp], T = 396 ; proxy ff4_tc (factor_data.xlsx col 4), T_m = 342  aligned to the LAST 342 residuals (T_m_end = 0)
+   BVAR_ b1 (unit-variance impact vector): 0.23917 0.04529 -0.048136 0.14962 
+[FAIL] X1 varm_proxy (zero-filled, uncentred) vs BVAR_ (sample-centred) IRF  max|diff|= 0.0291   impact-ratio diff= 0.0459  (centring of residuals/proxy over the proxy sample)
+[PASS] X2 same, with the proxy centred on its sample (exact match expected)  max|diff|= 6.66e-16
+[PASS] X3 varm:::proxy_B1 (Mertens-Ravn unit-variance impact) vs BVAR_ b1  max|diff|= 5.55e-17
+   varm_proxy$B1 (ML Sigma, uncentred, zero-filled): 0.22669 0.053327 -0.045371 0.13611 
+   relative gap in b11: 0.0522  (dof n/(n-k) in Sigma and the centring convention)
+[PASS] X5 irf(id_proxy) == varm_proxy (r = 1)  max|diff|= 1.11e-16
+[PASS] X6a first-stage F (BVAR_ F_m vs varm F)  BVAR_= 10.9652  varm= 10.9652
+   robust F: BVAR_ (White HC0 sandwich) = 11.9977  varm F_robust (sandwich HC1) = 11.9275  ratio= 0.994152  (HC1/HC0 = (T-2)/T = 0.994152 inverse)
+[PASS] X6b robust F equal up to HC1 vs HC0 small-sample factor  
+[PASS] X7 sub-sample with full proxy coverage: IRF direction equal (VAR residual means are 0 so centring is immaterial for u; proxy still uncentred)  max|diff|= 1.07e-12   impact-ratio diff = 1.45e-12
+=== 04_signs
+   S1 acceptance: BVAR_ rule 0.3380 (+-0.0019)  varm 0.3388 ; accepted draws varm 6000, BVAR_ 20278
+[PASS] S1a acceptance probability equal (single-shock restrictions)  diff= 0.000844
+[PASS] S1b accepted IRF (shock 1): means agree (|z|<4.5, 48 cells) and quantiles within 0.1 sd  max|z|= 1.41  max quantile gap/sd= 0.0626
+   S2 acceptance (restrictions on 2 shocks): BVAR_ global-flip rule 0.0882  varm per-column rule 0.1695  ratio 1.92 (theory 2 under Haar sign symmetry)
+[PASS] S2 two-shock restrictions: acceptance rate ratio varm/BVAR_ ~ 2 (BVAR_ cannot flip columns independently)  ratio= 1.921
+[PASS] S3 varm accepted impact matrices: P P' = Sigma and signs hold  n= 200
+=== 05_zerosign
+   findQs flag (0 = exactly identified, -1 = under-identified, 1 = over): -1  zero-restriction rows per shock: 2 0 0 0  index: 2 3 1 4 
+   BVAR_ acceptance 0.0161 (645 of 40000); note the sign of W columns is NOT normalised by BVAR_ (no flip), only accepted if signs match
+[PASS] Z1 BVAR_ draws: zeros exact and W W' = Sigma  max|zero|= 2.22e-16  max|WW'-Sigma|= 3.89e-16
+[PASS] Z2 varm draws: zeros exact and P P' = Sigma  max|zero|= 0  max|PP'-Sigma|= 3.89e-16  n= 20000
+   varm acceptance 0.1034 (per-column sign flip allowed => BVAR_ x 2^(#restricted shocks) expected: 0.1290)
+       [,1]  [,2]  [,3]  [,4]
+[1,]   5.45  1.26 -1.99 -1.85
+[2,]   3.84  0.69  2.45  0.31
+[3,] -10.66 -1.56  0.68  2.25
+[4,]   8.42  0.60 -0.74 -2.54
+[FAIL] Z3 distribution of accepted impact matrices (16 elements): |z| < 4.5 and quantile gaps < 0.1 sd  max|z|= 10.66  max quantile gap/sd= 1.03
+   BVAR_ with column flipping: acceptance 0.1353 (varm 0.1034)
+       [,1]  [,2]  [,3]  [,4]
+[1,]  12.79  2.29 -1.41 -0.41
+[2,]   9.89 -0.32 -0.05  1.31
+[3,] -23.31 -1.03  1.31 -1.87
+[4,]  20.07  0.80 -0.46  2.99
+[FAIL] Z3b BVAR_ sampler (with column flips) vs varm: acceptance equal  BVAR_flip= 0.1353  varm= 0.1034
+[FAIL] Z3c same: distribution of impact matrices |z|<4.5 and quantile gap < 0.1 sd  max|z|= 23.31  max q-gap/sd= 0.892
+[PASS] Z4a BVAR_ (exactly identified impact zeros) reproduces Cholesky(Sigma) up to column sign  max|diff|= 1.11e-16
+[PASS] Z4b varm id_restrictions (impact zeros) reproduces Cholesky(Sigma)  max|diff|= 0
+[PASS] Z5a BVAR_ (exactly identified long-run zeros) reproduces Blanchard-Quah up to column sign  max|diff|= 1.09e-15
+[PASS] Z5b varm id_restrictions (long-run zeros) reproduces Blanchard-Quah  max|diff|= 4.16e-15
+[PASS] Z6a varm: angle of the zero-restricted q3 within its null-space plane is uniform (KS)  KS p= 0.195  D= 0.00763
+[PASS] Z6b BVAR_ (findP with random C): same angle is uniform (KS)  KS p= 0.345  D= 0.00662 (non-uniform => different implied prior over rotations; neither sampler carries the ARRW importance weights)
+[PASS] Z7a varm: q1 | q3 has the conditional-Haar marginal (coordinate ~ U(-1,1)) (KS)  KS p= 0.488  D= 0.0059
+[FAIL] Z7b BVAR_: q1 | q3 has the conditional-Haar marginal (KS)  KS p= 6.78e-41  D= 0.0483
+=== 06_hetero
+[PASS] HT1 varm id_hetero recovers the true impact matrix (T=4000, up to order/sign)  max rel. error= 0.0416
+[PASS] HT2 varm id_hetero: lambda (variance ratios) recovered  est= 3.959,1.707,0.506  true= 4,1.6,0.5
+[PASS] HT3 varm formula on exact population covariances returns P (error ~ 1e-14)  err= 2.31e-16
+   BVAR_ impact (chol(diag(svals)) * V):
+       [,1]   [,2]   [,3]
+[1,] -1.804  0.368  0.778
+[2,] -0.438 -1.152 -0.470
+[3,]  0.192 -0.317  0.596
+   true P0:
+     [,1] [,2]  [,3]
+[1,]  1.0  0.0  0.24
+[2,]  0.4  1.2 -0.16
+[3,] -0.3  0.6  0.80
+[FAIL] HT4 BVAR_ impact matrix reproduces the sample covariance (W W' = Sigma_regime1)  rel err= 1.86  (W W' = diag(svals) by construction)
+[FAIL] HT5 BVAR_ impact matrix recovers the true P (up to order/sign)  max rel. error= Inf
+[FAIL] HT6 population check of BVAR_ formula: exact S0=PP', S1=P L P' -> BVAR_ impact  (expected FAIL if the .m code is wrong)
+=== 07_lp
+
+
+
+
+[PASS] L1a LP beta (shock gs1, contemp logip/logcpi, 4 lags) equals QR-OLS on the same design, h=0..12 (rel. to se, tol 1e-5)  max|diff|/se= 2.47e-08
+[PASS] L1b LP Newey-West se (varm nw_lag = h+1) equals Hamilton se of ols_reg (rel., tol 1e-5)  max rel diff= 1.55e-06
+[PASS] L1c same with BVAR_'s bandwidth L = lags + h + 1 (nw_lag argument; rel., tol 1e-5)  max rel diff= 2.62e-06
+
+
+   max|varm unit-impact LP - BVAR_ ir_lp/Omega_jj|/se per shock (h>=1): 0.814 0.239 0.434 0.209  ; BVAR_ ir_lp vs VAR-Cholesky IRF (varm) normalised: 0.296 1.83 0.414 0.751 
+[PASS] L2a BVAR_ LP-Cholesky response vs varm LP (different regressions: lag-1 coefficient of y_{t+h-1} vs contemporaneous controls): differences < 1 se, h>=1  max|diff|/se_varm= 0.814  (sampling difference, not an algebraic identity)
+   proxy LP: max|beta_BVAR_ - beta_varm|/se over h in {0,3,6,12} and 4 responses: 0.712  (varm also controls for 4 lags of the proxy)
+[FAIL] L3 proxy-LP coefficients agree within 0.5 se (difference = lags of the proxy included by varm only)  max|diff|/se= 0.712
+[PASS] L3b varm proxy LP engine == QR-OLS/NW on its own design (beta and se, rel. 1e-5)  max rel diff= 1.39e-06
+   bands: BVAR_ uses beta +- t_{0.95,T-ny-1} * se (talpha = tinv), varm uses normal quantiles: t= 1.6488  vs z= 1.6449 
+=== 08_default_posterior
+   Te = 394  k = 9  K = 4 : BVAR_ df = 380  varm nu = 385 
+[PASS] D1 BVAR_ sampler: E[Sigma] = S/(df-K-1) with df = Te-k-(K+1)  max|z| diag= 1.26
+[PASS] D2 varm mc sampler: E[Sigma] = U'U/(nu-K-1) with nu = Te-m (Jeffreys posterior)  max|z| diag= 1.2
+   ratio E_varm[Sigma]/E_BVAR_[Sigma] (diag) = 0.98684 0.98684 0.98684 0.98684  (= 0.98684 )
+[FAIL] D3 default-prior Sigma posteriors coincide (BVAR_ df vs varm nu)  BVAR_ df= 380  varm nu= 385  -> BVAR_ posterior is IW(S, T-k-K-1) (flat prior p(Sigma)=1, although labelled Jeffreys); varm is IW(S, T-k) (Jeffreys)
+[PASS] D4 varm mc: Cov(vec B) = E[Sigma] (x) (X'X)^-1 (diagonal, 3% tolerance)  max rel dev= 0.0278
+   BVAR_ IC.m argmin lags (AIC, HQIC, BIC): 6 6 6  ; varm var_select (AIC, HQ, SC): 6 3 2 
+[FAIL] I1 information-criterion lag choice agrees (BVAR_ IC.m vs varm var_select, 1..6 lags)  BVAR_: 6,6,6  varm: 6,3,2  (BVAR_ penalty uses K regressors/equation, not K*N + N(N+1)/2; own sample per lag)
+[PASS] I2 varm var_select agrees with vars::VARselect (AIC, HQ, SC)  vars: 6,3,2  varm: 6,3,2
