@@ -23,6 +23,7 @@
 #'   Default `c("lambda", "soc", "sur")`; `character(0)` fixes everything.
 #' @param var prior variance of deterministic-term coefficients.
 #' @return a `prior_minnesota` object for [bvarm()].
+#' @family Bayesian VAR
 #' @export
 prior_minnesota <- function(
   lambda = c(0.2, 0.4, 1e-4, 5),
@@ -42,7 +43,7 @@ prior_minnesota <- function(
       x <- c(x, 1, 1e-4, max(50, 100 * x))
     }
     if (length(x) != 4L) {
-      stop("`", nm, "` must be c(mode, sd, min, max)", call. = FALSE)
+      rlang::abort(paste0("`", nm, "` must be c(mode, sd, min, max)"))
     }
     stats::setNames(x, c("mode", "sd", "min", "max"))
   }
@@ -96,13 +97,19 @@ gamma_coef <- function(mode, sd) {
 #' @param sv_prior `c(a, b, V0)`: inverse-gamma(`a`, `b`) prior on the log-volatility innovation
 #'   variance (default mean 0.01) and prior variance `V0` of the initial log-volatility.
 #' @param store_h store the full volatility draws (`ndraw x T x K`); the posterior mean path is always kept.
+#' @param vars <[`tidy-select`][tidyselect::language]> endogenous variables
+#'   (default: all numeric columns of a data frame).
 #' @return a `bvarm` object. Use [irf()], [fevd()], [hd()], [forecast()], [stability()];
 #'   `$draws` is a [draws] object, `$hyper` the retained hyperparameter draws, `$logml` the
 #'   log marginal likelihood at the mode (or fixed values).
+#' @family Bayesian VAR
 #' @examples
 #' \donttest{
 #' fit <- bvarm(yraw, p = 4, ndraw = 2000, nburn = 1000)
 #' fit
+#' tidy(fit)
+#' glance(fit)
+#' autoplot(fit, "hyper")
 #' plot(irf(fit, horizon = 16))
 #' }
 #' @export
@@ -120,9 +127,11 @@ bvarm <- function(
   sv = FALSE,
   thin = 1L,
   sv_prior = c(a = 5, b = 0.04, V0 = 10),
-  store_h = FALSE
+  store_h = FALSE,
+  vars = NULL
 ) {
   cl <- match.call()
+  Y <- prep_data(Y, rlang::enquo(vars))$Y
   if (inherits(prior, "prior_triangular")) {
     return(bvarm_tri(
       Y,
@@ -141,171 +150,39 @@ bvarm <- function(
     ))
   }
   if (sv) {
-    stop("`sv = TRUE` requires `prior = prior_triangular()`", call. = FALSE)
+    rlang::abort("`sv = TRUE` requires `prior = prior_triangular()`")
   }
-  stopifnot(inherits(prior, "prior_minnesota"))
-  Y <- as_data_matrix(Y)
+  if (!inherits(prior, "prior_minnesota")) {
+    rlang::abort("`prior` must be prior_minnesota() or prior_triangular()")
+  }
   p <- as.integer(p)
   K <- ncol(Y)
+  vn <- colnames(Y)
   det <- make_det(nrow(Y), const, trend, exog)
   ols <- cpp_var_ols(Y, p, det)
-  Ye <- ols$Y
-  X <- ols$X
-  m <- ncol(X)
-  d <- ncol(det)
-  vn <- colnames(Y)
-
-  # prior mean
-  delta <- rep_len(prior$delta, K)
+  m <- ncol(ols$X)
   b <- matrix(0, m, K)
-  b[cbind(seq_len(K), seq_len(K))] <- delta
-  # IW scale
-  psi <- prior$psi
-  if (is.null(psi)) {
-    psi <- ar_resid_var(Y, p)
-  }
-  hp <- prior[c("lambda", "alpha", "soc", "sur")]
-  hyper <- prior$hyper
-  if ("psi" %in% hyper) {
-    hyper <- unique(hyper)
-  }
-  unknown <- setdiff(hyper, c("lambda", "alpha", "soc", "sur", "psi"))
-  if (length(unknown)) {
-    stop(
-      "unknown hyperparameter(s): ",
-      paste(unknown, collapse = ", "),
-      call. = FALSE
-    )
-  }
-  h0 <- c(
-    hp$lambda["mode"],
-    hp$alpha["mode"],
-    if (is.null(hp$soc)) -1 else hp$soc["mode"],
-    if (is.null(hp$sur)) -1 else hp$sur["mode"],
-    psi
-  )
-  names(h0) <- c("lambda", "alpha", "soc", "sur", paste0("psi.", vn))
-  isfree <- c(
-    lambda = "lambda" %in% hyper,
-    alpha = "alpha" %in% hyper,
-    soc = "soc" %in% hyper && !is.null(hp$soc),
-    sur = "sur" %in% hyper && !is.null(hp$sur),
-    rep("psi" %in% hyper, K)
-  )
-  lo <- c(
-    hp$lambda["min"],
-    hp$alpha["min"],
-    if (is.null(hp$soc)) 0 else hp$soc["min"],
-    if (is.null(hp$sur)) 0 else hp$sur["min"],
-    if ("psi" %in% hyper) psi / 100 else rep(0, K)
-  )
-  hi <- c(
-    hp$lambda["max"],
-    hp$alpha["max"],
-    if (is.null(hp$soc)) Inf else hp$soc["max"],
-    if (is.null(hp$sur)) Inf else hp$sur["max"],
-    if ("psi" %in% hyper) psi * 100 else rep(Inf, K)
-  )
-  gp <- rbind(
-    gamma_coef(hp$lambda["mode"], hp$lambda["sd"]),
-    gamma_coef(hp$alpha["mode"], hp$alpha["sd"]),
-    if (is.null(hp$soc)) c(1, 1) else gamma_coef(hp$soc["mode"], hp$soc["sd"]),
-    if (is.null(hp$sur)) c(1, 1) else gamma_coef(hp$sur["mode"], hp$sur["sd"])
-  )
-  ig <- c(0.004, 0.004)
+  b[cbind(seq_len(K), seq_len(K))] <- rep_len(prior$delta, K)
+  spec <- niw_spec(prior, Y, p, vn)
   args <- list(
-    Y = Ye,
-    X = X,
+    Y = ols$Y,
+    X = ols$X,
     p = p,
-    d = d,
+    d = ncol(det),
     has_const = const,
     b = b,
     vard = prior$var
   )
-  lp <- function(h, ml_only = FALSE) {
-    do.call(
-      cpp_niw_logpost,
-      c(
-        list(h = h),
-        args,
-        list(
-          isfree = as.integer(isfree),
-          gp = gp,
-          lo = unname(lo),
-          hi = unname(hi),
-          ig = ig,
-          eval_only_ml = ml_only
-        )
-      )
-    )
-  }
-  if (!any(isfree)) {
-    out <- do.call(
-      cpp_niw_fixed,
-      c(list(h = unname(h0)), args, list(ndraw = as.integer(ndraw)))
-    )
-    hyper_draws <- NULL
-    acc <- NA
-    logml <- out$logml
-    hmode <- h0
+  fit <- if (any(spec$isfree)) {
+    niw_hierarchical(spec, args, ndraw, nburn, scale, adapt)
   } else {
-    fi <- which(isfree)
-    f <- function(x) {
-      h <- h0
-      h[fi] <- x
-      lp(unname(h))
-    }
-    opt <- stats::optim(
-      h0[fi],
-      f,
-      method = "L-BFGS-B",
-      lower = lo[fi],
-      upper = hi[fi],
-      hessian = TRUE,
-      control = list(fnscale = -1, maxit = 500)
-    )
-    hmode <- h0
-    hmode[fi] <- opt$par
-    prop <- tryCatch(solve(-opt$hessian), error = function(e) NULL)
-    if (
-      is.null(prop) ||
-        !all(is.finite(prop)) ||
-        any(eigen(prop, symmetric = TRUE)$values <= 0)
-    ) {
-      prop <- diag(pmax(abs(opt$par), 1e-3)^2 * 0.01, length(fi))
-    }
-    prop <- (prop + t(prop)) / 2
-    out <- do.call(
-      cpp_niw_hier,
-      c(
-        list(h0 = unname(hmode)),
-        args,
-        list(
-          isfree = as.integer(isfree),
-          gp = gp,
-          lo = unname(lo),
-          hi = unname(hi),
-          ig = ig,
-          prop = prop,
-          niter = as.integer(ndraw),
-          nburn = as.integer(nburn),
-          scale = scale,
-          adapt = adapt,
-          acc_lo = 0.25,
-          acc_hi = 0.45
-        )
-      )
-    )
-    hyper_draws <- out$hyper[, fi, drop = FALSE]
-    colnames(hyper_draws) <- names(h0)[fi]
-    acc <- out$accept
-    logml <- lp(unname(hmode), TRUE)
+    niw_fixed_draws(spec, args, ndraw)
   }
-  dimnames(out$B) <- list(coef_names(vn, p, colnames(det)), vn, NULL)
-  d <- structure(
+  dimnames(fit$out$B) <- list(coef_names(vn, p, colnames(det)), vn, NULL)
+  draws <- structure(
     list(
-      B = out$B,
-      Sigma = out$Sigma,
+      B = fit$out$B,
+      Sigma = fit$out$Sigma,
       p = p,
       K = K,
       varnames = vn,
@@ -314,7 +191,7 @@ bvarm <- function(
     class = "varm_draws"
   )
   new_bvarm(
-    d,
+    draws,
     Y,
     det,
     p,
@@ -322,13 +199,169 @@ bvarm <- function(
     vn,
     list(
       prior = prior,
-      hyper = hyper_draws,
-      hyper_mode = hmode,
-      accept = acc,
-      logml = logml,
+      hyper = fit$hyper,
+      hyper_mode = fit$hmode,
+      accept = fit$accept,
+      logml = fit$logml,
       call = cl
     )
   )
+}
+
+# Hyperparameter vector (start values, free flags, bounds, gamma hyperpriors) of
+# the conjugate Minnesota prior; layout lambda, alpha, soc, sur, psi_1..psi_K
+niw_spec <- function(prior, Y, p, vn) {
+  K <- ncol(Y)
+  psi <- prior$psi
+  if (is.null(psi)) {
+    psi <- ar_resid_var(Y, p)
+  }
+  hp <- prior[c("lambda", "alpha", "soc", "sur")]
+  hyper <- unique(prior$hyper)
+  unknown <- setdiff(hyper, c("lambda", "alpha", "soc", "sur", "psi"))
+  if (length(unknown)) {
+    rlang::abort(paste0(
+      "unknown hyperparameter(s): ",
+      paste(unknown, collapse = ", ")
+    ))
+  }
+  # a dropped soc/sur dummy is encoded by `off` values in its slot
+  pick_or <- function(x, field, off) if (is.null(x)) off else x[field]
+  psi_free <- "psi" %in% hyper
+  h0 <- c(
+    hp$lambda["mode"],
+    hp$alpha["mode"],
+    pick_or(hp$soc, "mode", -1),
+    pick_or(hp$sur, "mode", -1),
+    psi
+  )
+  names(h0) <- c("lambda", "alpha", "soc", "sur", paste0("psi.", vn))
+  gamma_prior <- function(x) {
+    if (is.null(x)) c(1, 1) else gamma_coef(x["mode"], x["sd"])
+  }
+  list(
+    h0 = h0,
+    isfree = c(
+      lambda = "lambda" %in% hyper,
+      alpha = "alpha" %in% hyper,
+      soc = "soc" %in% hyper && !is.null(hp$soc),
+      sur = "sur" %in% hyper && !is.null(hp$sur),
+      rep(psi_free, K)
+    ),
+    lo = c(
+      hp$lambda["min"],
+      hp$alpha["min"],
+      pick_or(hp$soc, "min", -Inf),
+      pick_or(hp$sur, "min", -Inf),
+      if (psi_free) psi / 100 else rep(0, K)
+    ),
+    hi = c(
+      hp$lambda["max"],
+      hp$alpha["max"],
+      pick_or(hp$soc, "max", Inf),
+      pick_or(hp$sur, "max", Inf),
+      if (psi_free) psi * 100 else rep(Inf, K)
+    ),
+    gp = rbind(
+      gamma_coef(hp$lambda["mode"], hp$lambda["sd"]),
+      gamma_coef(hp$alpha["mode"], hp$alpha["sd"]),
+      gamma_prior(hp$soc),
+      gamma_prior(hp$sur)
+    ),
+    ig = c(0.004, 0.004)
+  )
+}
+
+# Log posterior (or only the log marginal likelihood) of the hyperparameters
+niw_logpost <- function(h, spec, args, ml_only = FALSE) {
+  do.call(
+    cpp_niw_logpost,
+    c(
+      list(h = h),
+      args,
+      list(
+        isfree = as.integer(spec$isfree),
+        gp = spec$gp,
+        lo = unname(spec$lo),
+        hi = unname(spec$hi),
+        ig = spec$ig,
+        eval_only_ml = ml_only
+      )
+    )
+  )
+}
+
+niw_fixed_draws <- function(spec, args, ndraw) {
+  out <- do.call(
+    cpp_niw_fixed,
+    c(list(h = unname(spec$h0)), args, list(ndraw = as.integer(ndraw)))
+  )
+  list(out = out, hyper = NULL, accept = NA, logml = out$logml, hmode = spec$h0)
+}
+
+# Posterior mode by L-BFGS-B, then the Metropolis-within-direct-draws sampler
+niw_hierarchical <- function(spec, args, ndraw, nburn, scale, adapt) {
+  h0 <- spec$h0
+  fi <- which(spec$isfree)
+  objective <- function(x) {
+    h <- h0
+    h[fi] <- x
+    niw_logpost(unname(h), spec, args)
+  }
+  opt <- stats::optim(
+    h0[fi],
+    objective,
+    method = "L-BFGS-B",
+    lower = spec$lo[fi],
+    upper = spec$hi[fi],
+    hessian = TRUE,
+    control = list(fnscale = -1, maxit = 500)
+  )
+  hmode <- h0
+  hmode[fi] <- opt$par
+  out <- do.call(
+    cpp_niw_hier,
+    c(
+      list(h0 = unname(hmode)),
+      args,
+      list(
+        isfree = as.integer(spec$isfree),
+        gp = spec$gp,
+        lo = unname(spec$lo),
+        hi = unname(spec$hi),
+        ig = spec$ig,
+        prop = proposal_cov(opt),
+        niter = as.integer(ndraw),
+        nburn = as.integer(nburn),
+        scale = scale,
+        adapt = adapt,
+        acc_lo = 0.25,
+        acc_hi = 0.45
+      )
+    )
+  )
+  hyper <- out$hyper[, fi, drop = FALSE]
+  colnames(hyper) <- names(h0)[fi]
+  list(
+    out = out,
+    hyper = hyper,
+    accept = out$accept,
+    logml = niw_logpost(unname(hmode), spec, args, TRUE),
+    hmode = hmode
+  )
+}
+
+# Random-walk proposal covariance: inverse Hessian at the mode, or a diagonal
+# fallback when it is not positive definite
+proposal_cov <- function(opt) {
+  prop <- tryCatch(solve(-opt$hessian), error = function(e) NULL)
+  bad <- is.null(prop) ||
+    !all(is.finite(prop)) ||
+    any(eigen(prop, symmetric = TRUE)$values <= 0)
+  if (bad) {
+    prop <- diag(pmax(abs(opt$par), 1e-3)^2 * 0.01, length(opt$par))
+  }
+  (prop + t(prop)) / 2
 }
 
 ar_resid_var <- function(Y, p) {
@@ -504,8 +537,8 @@ hd.bvarm <- function(object, id = id_chol(), ndraw = 100L, ...) {
   X <- cpp_var_ols(object$Y, p, object$det)$X
   acc <- array(0, c(nrow(Ye), K, K, length(idx)))
   for (k in seq_along(idx)) {
-    B <- d$B[,, idx[k]]
-    S <- d$Sigma[,, idx[k]]
+    B <- matrix(d$B[,, idx[k]], nrow(d$B), K)
+    S <- matrix(d$Sigma[,, idx[k]], K, K)
     P <- structural_irf(
       array(B, c(dim(B), 1)),
       array(S, c(dim(S), 1)),
@@ -515,7 +548,7 @@ hd.bvarm <- function(object, id = id_chol(), ndraw = 100L, ...) {
       id,
       object$varnames
     )
-    P <- if (id$type == "sign") P$P[,, 1] else P$irf[,, 1, 1]
+    P <- matrix(if (id$type == "sign") P$P[,, 1] else P$irf[,, 1, 1], K, K)
     acc[,,, k] <- cpp_hd(B, Ye - X %*% B, P, K, p)
   }
   contrib <- apply(acc, 1:3, stats::median)
@@ -550,6 +583,7 @@ hd.bvarm <- function(object, id = id_chol(), ndraw = 100L, ...) {
 #' @param inclusion SSVS prior inclusion probability.
 #' @param hom prior `c(a0, b0)` for constant variances when `sv = FALSE`: IG(`a0`, `b0 s_i^2`).
 #' @return a `prior_triangular` object.
+#' @family Bayesian VAR
 #' @export
 prior_triangular <- function(
   type = c("minnesota", "ssvs", "horseshoe"),
@@ -673,10 +707,11 @@ bvarm_tri <- function(
 #' structural shock of equation i) from a `bvarm` fitted with `sv = TRUE`.
 #' @param object a `bvarm` with stochastic volatility.
 #' @return `T_eff x K` matrix.
+#' @family Bayesian VAR
 #' @export
 volatility <- function(object) {
   if (is.null(object$h_mean)) {
-    stop("object has no stochastic volatility", call. = FALSE)
+    rlang::abort("object has no stochastic volatility")
   }
   exp(object$h_mean / 2)
 }

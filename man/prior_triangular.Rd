@@ -56,3 +56,13 @@ is \eqn{\frac{s_i^2}{s_j^2 l^{\alpha}}} (\eqn{s} = AR residual sd), multiplied b
 \item \code{horseshoe}: \eqn{\tau_i^2\lambda_{ij}^2} with half-Cauchy global/local scales (data-driven shrinkage).
 }
 }
+\seealso{
+Other Bayesian VAR:
+\code{\link[=autoplot.mcmc_diagnostics]{autoplot.mcmc_diagnostics()}},
+\code{\link[=bvarm]{bvarm()}},
+\code{\link[=mcmc_diagnostics]{mcmc_diagnostics()}},
+\code{\link[=prior_minnesota]{prior_minnesota()}},
+\code{\link[=tidy.bvarm]{tidy.bvarm()}},
+\code{\link[=volatility]{volatility()}}
+}
+\concept{Bayesian VAR}

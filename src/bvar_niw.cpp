@@ -24,7 +24,8 @@ struct NIWPost {
 
 // Evaluate marginal likelihood (and posterior) for hyperparameters
 // lambda, alpha, psi (M), mu (<=0: off), th (<=0: off).
-NIWPost niw_eval(const NIWSpec& s, double lambda, double alpha, const arma::vec& psi, double mu, double th) {
+NIWPost niw_eval(const NIWSpec& s, double lambda, double alpha, const arma::vec& psi, double mu, double th,
+                 bool full = true) {
   const int M = s.M, p = s.p, K = M * p + s.d;
   arma::vec om(K);
   for (int l = 1; l <= p; ++l)
@@ -88,10 +89,11 @@ NIWPost niw_eval(const NIWSpec& s, double lambda, double alpha, const arma::vec&
     ev(Yd, Xd, false, b2, sse2, pen2, oev2, pev2);
     out.logml -= lml(Nd, oev2, pev2);
   }
+  out.nu = N + M + 2;
+  if (!full) return out;   // posterior moments are only needed for accepted / retained points
   out.bhat = bh;
   out.S = arma::diagmat(psi) + sse + pen;
   out.Ginv = arma::inv_sympd(Xa.t() * Xa + Oinv);
-  out.nu = N + M + 2;
   return out;
 }
 
@@ -134,7 +136,7 @@ double log_post(const NIWSpec& s, const arma::vec& h, const arma::uvec& isfree, 
   for (arma::uword i = 0; i < h.n_elem; ++i)
     if (h(i) < lo(i) || h(i) > hi(i)) return -1e18;
   arma::vec psi = h.subvec(4, h.n_elem - 1);
-  NIWPost P = niw_eval(s, h(0), h(1), psi, h(2), h(3));
+  NIWPost P = niw_eval(s, h(0), h(1), psi, h(2), h(3), post != nullptr);
   if (post) *post = P;
   double lp = P.logml;
   if (eval_only_ml) return lp;
@@ -192,17 +194,16 @@ List cpp_niw_hier(const arma::vec& h0, const arma::mat& Y, const arma::mat& X, i
   arma::cube Bs(K, M, niter), Ss(M, M, niter);
   arma::mat Hs(niter, h.n_elem), B, S;
   arma::vec lps(niter);
-  long acc = 0, acc_burn = 0;
+  long acc = 0;
   int blk = 0; long blk_acc = 0;
   for (int it = 0; it < niter + nburn; ++it) {
     arma::vec z(nf);
     z.imbue([]() { return R::norm_rand(); });
     arma::vec hn = h;
     hn.elem(idx) += scale * (Lp * z);
-    NIWPost Pn;
-    double lpn = log_post(s, hn, isfree, gp, lo, hi, ig, false, &Pn);
+    double lpn = log_post(s, hn, isfree, gp, lo, hi, ig, false, nullptr);
     bool ok = std::log(R::unif_rand()) < lpn - lp;
-    if (ok) { h = hn; lp = lpn; P = Pn; ++blk_acc; if (it >= nburn) ++acc; else ++acc_burn; }
+    if (ok) { h = hn; lp = lpn; log_post(s, hn, isfree, gp, lo, hi, ig, false, &P); ++blk_acc; if (it >= nburn) ++acc; }
     ++blk;
     if (adapt && it < nburn && blk == 50) {
       double r = (double)blk_acc / blk;

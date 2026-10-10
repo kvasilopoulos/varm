@@ -51,3 +51,13 @@ Each hyperparameter is a \code{c(mode, sd, min, max)} vector (gamma hyperprior w
 standard deviation; hard bounds). \code{hyper} names the hyperparameters estimated hierarchically;
 all others stay fixed at their \code{mode}.
 }
+\seealso{
+Other Bayesian VAR:
+\code{\link[=autoplot.mcmc_diagnostics]{autoplot.mcmc_diagnostics()}},
+\code{\link[=bvarm]{bvarm()}},
+\code{\link[=mcmc_diagnostics]{mcmc_diagnostics()}},
+\code{\link[=prior_triangular]{prior_triangular()}},
+\code{\link[=tidy.bvarm]{tidy.bvarm()}},
+\code{\link[=volatility]{volatility()}}
+}
+\concept{Bayesian VAR}

@@ -66,6 +66,32 @@ void sv_update(const arma::vec& e, arma::vec& h, double& h0, double& sig2, doubl
 
 }  // namespace
 
+
+// Test hook: Geweke (2004) joint-distribution test of the KSC/FFBS update. Returns an nsim x 4 matrix
+// (sig2, h0, h_T, mean h) from the marginal-conditional simulator (cols 0-3 of `fwd`) and from the
+// successive-conditional simulator driven by sv_update (`chain`).
+// [[Rcpp::export]]
+List cpp_sv_geweke(int T, int nsim, double a_h, double b_h, double mu0, double V0) {
+  arma::mat fwd(nsim, 4), chain(nsim, 4);
+  auto prior_draw = [&](arma::vec& h, double& h0, double& s2) {
+    s2 = rig(a_h, b_h); h0 = mu0 + std::sqrt(V0) * R::norm_rand();
+    double c = h0;
+    for (int t = 0; t < T; ++t) { c += std::sqrt(s2) * R::norm_rand(); h(t) = c; }
+  };
+  arma::vec h(T), e(T); double h0, s2; std::vector<int> s(T);
+  for (int n = 0; n < nsim; ++n) {
+    prior_draw(h, h0, s2);
+    fwd.row(n) = arma::rowvec({s2, h0, h(T - 1), arma::mean(h)});
+  }
+  prior_draw(h, h0, s2);
+  for (int n = 0; n < nsim; ++n) {
+    for (int t = 0; t < T; ++t) e(t) = std::exp(0.5 * h(t)) * R::norm_rand();
+    sv_update(e, h, h0, s2, mu0, V0, a_h, b_h, s);
+    chain.row(n) = arma::rowvec({s2, h0, h(T - 1), arma::mean(h)});
+  }
+  return List::create(_["fwd"] = fwd, _["chain"] = chain);
+}
+
 // prior_type: 0 Minnesota, 1 SSVS, 2 horseshoe
 // pr: [lam1, lam2, alpha, lam3 (det sd multiplier), lam5 (contemp sd), ssvs_rho, ssvs_pi]
 // svp: [a_h, b_h, V0] ; homosk: [a0, b0 multiplier] prior IG(a0, b0 * s_i^2)

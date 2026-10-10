@@ -16,3 +16,13 @@ volatility(object)
 Posterior mean of the stochastic volatilities \eqn{\exp(h_{it}/2)} (standard deviation of the
 structural shock of equation i) from a \code{bvarm} fitted with \code{sv = TRUE}.
 }
+\seealso{
+Other Bayesian VAR:
+\code{\link[=autoplot.mcmc_diagnostics]{autoplot.mcmc_diagnostics()}},
+\code{\link[=bvarm]{bvarm()}},
+\code{\link[=mcmc_diagnostics]{mcmc_diagnostics()}},
+\code{\link[=prior_minnesota]{prior_minnesota()}},
+\code{\link[=prior_triangular]{prior_triangular()}},
+\code{\link[=tidy.bvarm]{tidy.bvarm()}}
+}
+\concept{Bayesian VAR}

@@ -18,11 +18,14 @@ bvarm(
   sv = FALSE,
   thin = 1L,
   sv_prior = c(a = 5, b = 0.04, V0 = 10),
-  store_h = FALSE
+  store_h = FALSE,
+  vars = NULL
 )
 }
 \arguments{
-\item{Y}{numeric matrix, data frame or \code{ts} (T x K) of endogenous variables.}
+\item{Y}{data frame (preferred), \code{ts} or numeric matrix (T x K) of endogenous
+variables. Non-numeric columns of a data frame are dropped; a \code{Date} column
+is kept as \verb{$dates} and used by the plots.}
 
 \item{p}{lag order.}
 
@@ -37,8 +40,9 @@ bvarm(
 
 \item{trend}{include a linear trend.}
 
-\item{exog}{optional T x q matrix of exogenous regressors (contemporaneous, treated
-like deterministic terms; future values are then required for forecasting).}
+\item{exog}{optional T x q matrix or data frame of exogenous regressors
+(contemporaneous, treated like deterministic terms; future values are then
+required for forecasting).}
 
 \item{scale}{initial scale of the random-walk proposal.}
 
@@ -53,6 +57,9 @@ only with \code{\link[=prior_triangular]{prior_triangular()}}.}
 variance (default mean 0.01) and prior variance \code{V0} of the initial log-volatility.}
 
 \item{store_h}{store the full volatility draws (\verb{ndraw x T x K}); the posterior mean path is always kept.}
+
+\item{vars}{<\code{\link[tidyselect:language]{tidy-select}}> endogenous variables
+(default: all numeric columns of a data frame).}
 }
 \value{
 a \code{bvarm} object. Use \code{\link[=irf]{irf()}}, \code{\link[=fevd]{fevd()}}, \code{\link[=hd]{hd()}}, \code{\link[=forecast]{forecast()}}, \code{\link[=stability]{stability()}};
@@ -69,6 +76,19 @@ MCMC loop is C++.
 \donttest{
 fit <- bvarm(yraw, p = 4, ndraw = 2000, nburn = 1000)
 fit
+tidy(fit)
+glance(fit)
+autoplot(fit, "hyper")
 plot(irf(fit, horizon = 16))
 }
 }
+\seealso{
+Other Bayesian VAR:
+\code{\link[=autoplot.mcmc_diagnostics]{autoplot.mcmc_diagnostics()}},
+\code{\link[=mcmc_diagnostics]{mcmc_diagnostics()}},
+\code{\link[=prior_minnesota]{prior_minnesota()}},
+\code{\link[=prior_triangular]{prior_triangular()}},
+\code{\link[=tidy.bvarm]{tidy.bvarm()}},
+\code{\link[=volatility]{volatility()}}
+}
+\concept{Bayesian VAR}
