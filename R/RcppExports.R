@@ -13,6 +13,10 @@ cpp_niw_hier <- function(h0, Y, X, p, d, has_const, b, vard, isfree, gp, lo, hi,
     .Call(`_varm_cpp_niw_hier`, h0, Y, X, p, d, has_const, b, vard, isfree, gp, lo, hi, ig, prop, niter, nburn, scale, adapt, acc_lo, acc_hi)
 }
 
+cpp_sv_geweke <- function(T, nsim, a_h, b_h, mu0, V0) {
+    .Call(`_varm_cpp_sv_geweke`, T, nsim, a_h, b_h, mu0, V0)
+}
+
 cpp_bvar_tri <- function(Y, X, p, d, prior_type, sv, scale, delta, pr, svp, hom, ndraw, nburn, thin, store_h) {
     .Call(`_varm_cpp_bvar_tri`, Y, X, p, d, prior_type, sv, scale, delta, pr, svp, hom, ndraw, nburn, thin, store_h)
 }
@@ -85,7 +89,47 @@ cpp_fevd_many <- function(irf, H1) {
     .Call(`_varm_cpp_fevd_many`, irf, H1)
 }
 
+cpp_proxy_irf <- function(Bs, G, p, H, sc) {
+    .Call(`_varm_cpp_proxy_irf`, Bs, G, p, H, sc)
+}
+
+cpp_proxy_boot <- function(Y, p, det, B, U, z, nboot, type, block) {
+    .Call(`_varm_cpp_proxy_boot`, Y, p, det, B, U, z, nboot, type, block)
+}
+
+cpp_zs_irf <- function(Bs, Ss, p, H, S, Z, zlr, nrot, maxtry) {
+    .Call(`_varm_cpp_zs_irf`, Bs, Ss, p, H, S, Z, zlr, nrot, maxtry)
+}
+
 cpp_lp <- function(Y, S, W, Z, H, first, cum, se_type, nw_fixed, dof_adjust) {
     .Call(`_varm_cpp_lp`, Y, S, W, Z, H, first, cum, se_type, nw_fixed, dof_adjust)
+}
+
+cpp_lp_cov <- function(Y, S, W, Z, H, first, cum, se_type, nw_fixed, dof_adjust) {
+    .Call(`_varm_cpp_lp_cov`, Y, S, W, Z, H, first, cum, se_type, nw_fixed, dof_adjust)
+}
+
+cpp_proxy_rot <- function(Bs, Ss, Ds, p, H, S, nq, keep, maxtry, js, tgt, size) {
+    .Call(`_varm_cpp_proxy_rot`, Bs, Ss, Ds, p, H, S, nq, keep, maxtry, js, tgt, size)
+}
+
+cpp_tvp <- function(Y, X, p, b0, P0, a0, Pa0, Qbar, nuQ, Q0, Sbar, nuS, S0, hmu, hV0, wprior, s2prior, opts, ndraw, nburn, thin, nsp) {
+    .Call(`_varm_cpp_tvp`, Y, X, p, b0, P0, a0, Pa0, Qbar, nuQ, Q0, Sbar, nuS, S0, hmu, hV0, wprior, s2prior, opts, ndraw, nburn, thin, nsp)
+}
+
+cpp_tvp_irf <- function(Bp, Ap, Hp, m, K, p, H, dates) {
+    .Call(`_varm_cpp_tvp_irf`, Bp, Ap, Hp, m, K, p, H, dates)
+}
+
+cpp_tvp_irf_path <- function(Bp, Ap, Hp, m, K, p, h, i, j, nv, size) {
+    .Call(`_varm_cpp_tvp_irf_path`, Bp, Ap, Hp, m, K, p, h, i, j, nv, size)
+}
+
+cpp_tvp_sd <- function(Ap, Hp, K) {
+    .Call(`_varm_cpp_tvp_sd`, Ap, Hp, K)
+}
+
+cpp_tvp_forecast <- function(bl, al, hl, Qp, Sp, Wp, m, K, p, Ylast, det, H, drift, tvb, tva, sv) {
+    .Call(`_varm_cpp_tvp_forecast`, bl, al, hl, Qp, Sp, Wp, m, K, p, Ylast, det, H, drift, tvb, tva, sv)
 }
 

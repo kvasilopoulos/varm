@@ -84,6 +84,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_sv_geweke
+List cpp_sv_geweke(int T, int nsim, double a_h, double b_h, double mu0, double V0);
+RcppExport SEXP _varm_cpp_sv_geweke(SEXP TSEXP, SEXP nsimSEXP, SEXP a_hSEXP, SEXP b_hSEXP, SEXP mu0SEXP, SEXP V0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type T(TSEXP);
+    Rcpp::traits::input_parameter< int >::type nsim(nsimSEXP);
+    Rcpp::traits::input_parameter< double >::type a_h(a_hSEXP);
+    Rcpp::traits::input_parameter< double >::type b_h(b_hSEXP);
+    Rcpp::traits::input_parameter< double >::type mu0(mu0SEXP);
+    Rcpp::traits::input_parameter< double >::type V0(V0SEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_sv_geweke(T, nsim, a_h, b_h, mu0, V0));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_bvar_tri
 List cpp_bvar_tri(const arma::mat& Y, const arma::mat& X, int p, int d, int prior_type, bool sv, const arma::vec& scale, const arma::vec& delta, const arma::vec& pr, const arma::vec& svp, const arma::vec& hom, int ndraw, int nburn, int thin, bool store_h);
 RcppExport SEXP _varm_cpp_bvar_tri(SEXP YSEXP, SEXP XSEXP, SEXP pSEXP, SEXP dSEXP, SEXP prior_typeSEXP, SEXP svSEXP, SEXP scaleSEXP, SEXP deltaSEXP, SEXP prSEXP, SEXP svpSEXP, SEXP homSEXP, SEXP ndrawSEXP, SEXP nburnSEXP, SEXP thinSEXP, SEXP store_hSEXP) {
@@ -358,6 +374,59 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_proxy_irf
+arma::cube cpp_proxy_irf(const arma::cube& Bs, const arma::mat& G, int p, int H, int sc);
+RcppExport SEXP _varm_cpp_proxy_irf(SEXP BsSEXP, SEXP GSEXP, SEXP pSEXP, SEXP HSEXP, SEXP scSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::cube& >::type Bs(BsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type G(GSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type H(HSEXP);
+    Rcpp::traits::input_parameter< int >::type sc(scSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_proxy_irf(Bs, G, p, H, sc));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_proxy_boot
+List cpp_proxy_boot(const arma::mat& Y, int p, const arma::mat& det, const arma::mat& B, const arma::mat& U, const arma::vec& z, int nboot, int type, int block);
+RcppExport SEXP _varm_cpp_proxy_boot(SEXP YSEXP, SEXP pSEXP, SEXP detSEXP, SEXP BSEXP, SEXP USEXP, SEXP zSEXP, SEXP nbootSEXP, SEXP typeSEXP, SEXP blockSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type det(detSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type B(BSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type U(USEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type z(zSEXP);
+    Rcpp::traits::input_parameter< int >::type nboot(nbootSEXP);
+    Rcpp::traits::input_parameter< int >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< int >::type block(blockSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_proxy_boot(Y, p, det, B, U, z, nboot, type, block));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_zs_irf
+List cpp_zs_irf(const arma::cube& Bs, const arma::cube& Ss, int p, int H, const arma::cube& S, const arma::cube& Z, const arma::mat& zlr, int nrot, int maxtry);
+RcppExport SEXP _varm_cpp_zs_irf(SEXP BsSEXP, SEXP SsSEXP, SEXP pSEXP, SEXP HSEXP, SEXP SSEXP, SEXP ZSEXP, SEXP zlrSEXP, SEXP nrotSEXP, SEXP maxtrySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::cube& >::type Bs(BsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Ss(SsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type zlr(zlrSEXP);
+    Rcpp::traits::input_parameter< int >::type nrot(nrotSEXP);
+    Rcpp::traits::input_parameter< int >::type maxtry(maxtrySEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_zs_irf(Bs, Ss, p, H, S, Z, zlr, nrot, maxtry));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_lp
 List cpp_lp(const arma::mat& Y, const arma::mat& S, const arma::mat& W, const arma::mat& Z, int H, int first, const arma::uvec& cum, int se_type, int nw_fixed, bool dof_adjust);
 RcppExport SEXP _varm_cpp_lp(SEXP YSEXP, SEXP SSEXP, SEXP WSEXP, SEXP ZSEXP, SEXP HSEXP, SEXP firstSEXP, SEXP cumSEXP, SEXP se_typeSEXP, SEXP nw_fixedSEXP, SEXP dof_adjustSEXP) {
@@ -378,11 +447,164 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_lp_cov
+List cpp_lp_cov(const arma::mat& Y, const arma::mat& S, const arma::mat& W, const arma::mat& Z, int H, int first, const arma::uvec& cum, int se_type, int nw_fixed, bool dof_adjust);
+RcppExport SEXP _varm_cpp_lp_cov(SEXP YSEXP, SEXP SSEXP, SEXP WSEXP, SEXP ZSEXP, SEXP HSEXP, SEXP firstSEXP, SEXP cumSEXP, SEXP se_typeSEXP, SEXP nw_fixedSEXP, SEXP dof_adjustSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Z(ZSEXP);
+    Rcpp::traits::input_parameter< int >::type H(HSEXP);
+    Rcpp::traits::input_parameter< int >::type first(firstSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type cum(cumSEXP);
+    Rcpp::traits::input_parameter< int >::type se_type(se_typeSEXP);
+    Rcpp::traits::input_parameter< int >::type nw_fixed(nw_fixedSEXP);
+    Rcpp::traits::input_parameter< bool >::type dof_adjust(dof_adjustSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_lp_cov(Y, S, W, Z, H, first, cum, se_type, nw_fixed, dof_adjust));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_proxy_rot
+List cpp_proxy_rot(const arma::cube& Bs, const arma::cube& Ss, const arma::cube& Ds, int p, int H, const arma::cube& S, int nq, int keep, int maxtry, int js, int tgt, double size);
+RcppExport SEXP _varm_cpp_proxy_rot(SEXP BsSEXP, SEXP SsSEXP, SEXP DsSEXP, SEXP pSEXP, SEXP HSEXP, SEXP SSEXP, SEXP nqSEXP, SEXP keepSEXP, SEXP maxtrySEXP, SEXP jsSEXP, SEXP tgtSEXP, SEXP sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::cube& >::type Bs(BsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Ss(SsSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Ds(DsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type S(SSEXP);
+    Rcpp::traits::input_parameter< int >::type nq(nqSEXP);
+    Rcpp::traits::input_parameter< int >::type keep(keepSEXP);
+    Rcpp::traits::input_parameter< int >::type maxtry(maxtrySEXP);
+    Rcpp::traits::input_parameter< int >::type js(jsSEXP);
+    Rcpp::traits::input_parameter< int >::type tgt(tgtSEXP);
+    Rcpp::traits::input_parameter< double >::type size(sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_proxy_rot(Bs, Ss, Ds, p, H, S, nq, keep, maxtry, js, tgt, size));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_tvp
+List cpp_tvp(const arma::mat& Y, const arma::mat& X, int p, const arma::vec& b0, const arma::mat& P0, const arma::vec& a0, const List& Pa0, const arma::mat& Qbar, double nuQ, const arma::mat& Q0, const List& Sbar, const arma::vec& nuS, const List& S0, const arma::vec& hmu, double hV0, const arma::vec& wprior, const arma::vec& s2prior, const arma::vec& opts, int ndraw, int nburn, int thin, int nsp);
+RcppExport SEXP _varm_cpp_tvp(SEXP YSEXP, SEXP XSEXP, SEXP pSEXP, SEXP b0SEXP, SEXP P0SEXP, SEXP a0SEXP, SEXP Pa0SEXP, SEXP QbarSEXP, SEXP nuQSEXP, SEXP Q0SEXP, SEXP SbarSEXP, SEXP nuSSEXP, SEXP S0SEXP, SEXP hmuSEXP, SEXP hV0SEXP, SEXP wpriorSEXP, SEXP s2priorSEXP, SEXP optsSEXP, SEXP ndrawSEXP, SEXP nburnSEXP, SEXP thinSEXP, SEXP nspSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type b0(b0SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type P0(P0SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type a0(a0SEXP);
+    Rcpp::traits::input_parameter< const List& >::type Pa0(Pa0SEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Qbar(QbarSEXP);
+    Rcpp::traits::input_parameter< double >::type nuQ(nuQSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Q0(Q0SEXP);
+    Rcpp::traits::input_parameter< const List& >::type Sbar(SbarSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type nuS(nuSSEXP);
+    Rcpp::traits::input_parameter< const List& >::type S0(S0SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type hmu(hmuSEXP);
+    Rcpp::traits::input_parameter< double >::type hV0(hV0SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type wprior(wpriorSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type s2prior(s2priorSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type opts(optsSEXP);
+    Rcpp::traits::input_parameter< int >::type ndraw(ndrawSEXP);
+    Rcpp::traits::input_parameter< int >::type nburn(nburnSEXP);
+    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< int >::type nsp(nspSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_tvp(Y, X, p, b0, P0, a0, Pa0, Qbar, nuQ, Q0, Sbar, nuS, S0, hmu, hV0, wprior, s2prior, opts, ndraw, nburn, thin, nsp));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_tvp_irf
+arma::cube cpp_tvp_irf(const arma::cube& Bp, const arma::cube& Ap, const arma::cube& Hp, int m, int K, int p, int H, const arma::uvec& dates);
+RcppExport SEXP _varm_cpp_tvp_irf(SEXP BpSEXP, SEXP ApSEXP, SEXP HpSEXP, SEXP mSEXP, SEXP KSEXP, SEXP pSEXP, SEXP HSEXP, SEXP datesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::cube& >::type Bp(BpSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Ap(ApSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Hp(HpSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type dates(datesSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_tvp_irf(Bp, Ap, Hp, m, K, p, H, dates));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_tvp_irf_path
+arma::mat cpp_tvp_irf_path(const arma::cube& Bp, const arma::cube& Ap, const arma::cube& Hp, int m, int K, int p, int h, int i, int j, int nv, double size);
+RcppExport SEXP _varm_cpp_tvp_irf_path(SEXP BpSEXP, SEXP ApSEXP, SEXP HpSEXP, SEXP mSEXP, SEXP KSEXP, SEXP pSEXP, SEXP hSEXP, SEXP iSEXP, SEXP jSEXP, SEXP nvSEXP, SEXP sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::cube& >::type Bp(BpSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Ap(ApSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Hp(HpSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type h(hSEXP);
+    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< int >::type j(jSEXP);
+    Rcpp::traits::input_parameter< int >::type nv(nvSEXP);
+    Rcpp::traits::input_parameter< double >::type size(sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_tvp_irf_path(Bp, Ap, Hp, m, K, p, h, i, j, nv, size));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_tvp_sd
+arma::cube cpp_tvp_sd(const arma::cube& Ap, const arma::cube& Hp, int K);
+RcppExport SEXP _varm_cpp_tvp_sd(SEXP ApSEXP, SEXP HpSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::cube& >::type Ap(ApSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Hp(HpSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_tvp_sd(Ap, Hp, K));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_tvp_forecast
+arma::cube cpp_tvp_forecast(const arma::mat& bl, const arma::mat& al, const arma::mat& hl, const arma::cube& Qp, const arma::mat& Sp, const arma::mat& Wp, int m, int K, int p, const arma::mat& Ylast, const arma::mat& det, int H, bool drift, bool tvb, bool tva, bool sv);
+RcppExport SEXP _varm_cpp_tvp_forecast(SEXP blSEXP, SEXP alSEXP, SEXP hlSEXP, SEXP QpSEXP, SEXP SpSEXP, SEXP WpSEXP, SEXP mSEXP, SEXP KSEXP, SEXP pSEXP, SEXP YlastSEXP, SEXP detSEXP, SEXP HSEXP, SEXP driftSEXP, SEXP tvbSEXP, SEXP tvaSEXP, SEXP svSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type bl(blSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type al(alSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type hl(hlSEXP);
+    Rcpp::traits::input_parameter< const arma::cube& >::type Qp(QpSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Sp(SpSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Wp(WpSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Ylast(YlastSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type det(detSEXP);
+    Rcpp::traits::input_parameter< int >::type H(HSEXP);
+    Rcpp::traits::input_parameter< bool >::type drift(driftSEXP);
+    Rcpp::traits::input_parameter< bool >::type tvb(tvbSEXP);
+    Rcpp::traits::input_parameter< bool >::type tva(tvaSEXP);
+    Rcpp::traits::input_parameter< bool >::type sv(svSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_tvp_forecast(bl, al, hl, Qp, Sp, Wp, m, K, p, Ylast, det, H, drift, tvb, tva, sv));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_varm_cpp_niw_logpost", (DL_FUNC) &_varm_cpp_niw_logpost, 14},
     {"_varm_cpp_niw_fixed", (DL_FUNC) &_varm_cpp_niw_fixed, 9},
     {"_varm_cpp_niw_hier", (DL_FUNC) &_varm_cpp_niw_hier, 20},
+    {"_varm_cpp_sv_geweke", (DL_FUNC) &_varm_cpp_sv_geweke, 6},
     {"_varm_cpp_bvar_tri", (DL_FUNC) &_varm_cpp_bvar_tri, 15},
     {"_varm_cpp_forecast_sv", (DL_FUNC) &_varm_cpp_forecast_sv, 8},
     {"_varm_cpp_var_ols", (DL_FUNC) &_varm_cpp_var_ols, 3},
@@ -401,7 +623,17 @@ static const R_CallMethodDef CallEntries[] = {
     {"_varm_cpp_normalise", (DL_FUNC) &_varm_cpp_normalise, 5},
     {"_varm_cpp_quantiles", (DL_FUNC) &_varm_cpp_quantiles, 3},
     {"_varm_cpp_fevd_many", (DL_FUNC) &_varm_cpp_fevd_many, 2},
+    {"_varm_cpp_proxy_irf", (DL_FUNC) &_varm_cpp_proxy_irf, 5},
+    {"_varm_cpp_proxy_boot", (DL_FUNC) &_varm_cpp_proxy_boot, 9},
+    {"_varm_cpp_zs_irf", (DL_FUNC) &_varm_cpp_zs_irf, 9},
     {"_varm_cpp_lp", (DL_FUNC) &_varm_cpp_lp, 10},
+    {"_varm_cpp_lp_cov", (DL_FUNC) &_varm_cpp_lp_cov, 10},
+    {"_varm_cpp_proxy_rot", (DL_FUNC) &_varm_cpp_proxy_rot, 12},
+    {"_varm_cpp_tvp", (DL_FUNC) &_varm_cpp_tvp, 22},
+    {"_varm_cpp_tvp_irf", (DL_FUNC) &_varm_cpp_tvp_irf, 8},
+    {"_varm_cpp_tvp_irf_path", (DL_FUNC) &_varm_cpp_tvp_irf_path, 11},
+    {"_varm_cpp_tvp_sd", (DL_FUNC) &_varm_cpp_tvp_sd, 3},
+    {"_varm_cpp_tvp_forecast", (DL_FUNC) &_varm_cpp_tvp_forecast, 16},
     {NULL, NULL, 0}
 };
 
