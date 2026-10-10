@@ -40,3 +40,10 @@ No varm counterpart: narrative signs, ICA/higher-moment ID, FAVAR, mixed-frequen
 2. Fix proxy docs or demean instruments; revisit fevd under proxy.
 3. Reinstall rv packages from source against Homebrew R to unskip comparison tests.
 4. Decide on `brew install octave` to run toolbox code for real.
+
+## Fix log — 2026-10-11 (dummy priors)
+Edited src/bvar_niw.cpp, R/bvar.R (new args ybar/xbar), added src/varm_types.h (makes compileAttributes emit the RcppArmadillo include; it was being dropped, breaking compile), regenerated RcppExports.
+- #2 soc/sur dummies now use the p presample observations (BEAR/Sims/GLP). BEAR T4a/b/c posterior tests now PASS (were FAIL, z up to 152). Old-convention T4a'/b'/c' checks removed from validation/bear/01_ols_nw.R.
+- #3 `sur` dummy now puts presample mean/theta on all deterministic+exog columns (T4c PASS).
+- #1 dummy-block ML now uses its posterior update. SumCoeff(0.1) logml: -631.3177 = BEAR formula (T11 PASS; was -595.5 with the stale rows). Residual: SumCoeff+InitialObs jointly differs by 0.045 (-612.869 vs -612.915), not yet explained — T11 FAIL; T11' "prior-mean" diagnostics are obsolete.
+- Full suite (VARM_SRC=1): 846 PASS / 0 FAIL / 5 SKIP. Not committed. No new testthat tests added yet.

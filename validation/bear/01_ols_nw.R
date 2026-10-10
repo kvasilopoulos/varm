@@ -41,9 +41,6 @@ chk("T4b NW + InitialObs(1e-3) no exog", Y, X, io = 1e-3, ex = FALSE)
 chk("T4c NW + InitialObs(1e-3) with exog Oil", Y, X, io = 1e-3, ex = TRUE)
 
 cat("--- diagnosis: replicate BEAR dummies with the mean of the first p rows of the *regression* sample (what varm does)\n")
-chk("T4a' NW + SumCoeff(0.1)", Y, X, sc = .1, ini0 = p)
-chk("T4b' NW + InitialObs(1e-3) no exog", Y, X, io = 1e-3, ex = FALSE, ini0 = p)
-chk("T4c' NW + InitialObs(1e-3) with exog", Y, X, io = 1e-3, ex = TRUE, ini0 = p)
 
 ## T11 marginal likelihood: BEAR nwmlik.m / nwmlikdata.m (log ML of the NW prior, used by BEAR hyperparameter optimisation) vs varm$logml
 mgamma <- function(a, n) { j <- 1:n; n * (n - 1) / 4 * log(pi) + sum(lgamma(a + (1 - j) / 2)) }
@@ -73,12 +70,12 @@ bear_nwmlik <- function(Y, Xex, p, sc = NULL, io = NULL, ini0 = 0, dummy_update 
 }
 chk_ml <- function(nm, sc = NULL, io = NULL, ex = TRUE) {
   Xe <- if (ex) X else NULL
-  b <- bear_nwmlik(Y, Xe, p, sc, io, ini0 = p)   # ini0 = p: use varm's dummy convention so only the ML formula is compared
+  b <- bear_nwmlik(Y, Xe, p, sc, io, ini0 = 0)   # dummies from the p presample obs (BEAR convention, now also varm)
   pr <- prior_minnesota(lambda = .1, alpha = 2, soc = if (is.null(sc)) NULL else c(sc, 1, 1e-4, 50), sur = if (is.null(io)) NULL else c(io, 1, 1e-4, 50),
                         psi = b$nw$arvar, delta = .8, hyper = character(0), var = 100)
   fit <- bvarm(Y, p, prior = pr, ndraw = 10, exog = Xe)
   rep_(paste("T11", nm, "log ML varm vs BEAR nwmlik"), abs(fit$logml - b$logml) < 1e-6, "varm", format(fit$logml, digits = 10), "BEAR-formula", format(b$logml, digits = 10))
-  if (!is.null(sc) || !is.null(io)) { b2 <- bear_nwmlik(Y, Xe, p, sc, io, ini0 = p, dummy_update = FALSE)
+  if (!is.null(sc) || !is.null(io)) { b2 <- bear_nwmlik(Y, Xe, p, sc, io, ini0 = 0, dummy_update = FALSE)
     rep_(paste("T11'", nm, "varm == BEAR formula with dummy block evaluated at prior mean (diagnosis)"), abs(fit$logml - b2$logml) < 1e-6, "diff", format(fit$logml - b2$logml, digits = 3)) }
 }
 chk_ml("NW no dummies"); chk_ml("NW + SumCoeff(0.1)", sc = .1); chk_ml("NW + SumCoeff + InitialObs (no exog)", sc = .1, io = .001, ex = FALSE)
@@ -92,7 +89,7 @@ nw_logml_general <- function(Y, X, B0, Phi0, S0, a0) {
     n / 2 * (determinant(Phib)$modulus[1] - determinant(Phi0)$modulus[1])
 }
 {
-  sc <- .1; nw <- bear_nw(Y, X, p, sumcoef = sc, ini0 = p); o <- bear_olsvar(Y, X, TRUE, p); n <- 3; m <- o$m; k <- o$k
+  sc <- .1; nw <- bear_nw(Y, X, p, sumcoef = sc, ini0 = 0); o <- bear_olsvar(Y, X, TRUE, p); n <- 3; m <- o$m; k <- o$k
   ini <- Y[p + 1:p, , drop = FALSE]; dy <- diag(colMeans(ini) / sc); Xd <- cbind(do.call(cbind, rep(list(dy), p)), matrix(0, n, m))
   Pi0 <- diag(1 / nw$phi0); ipd <- Pi0 + crossprod(Xd); Phid <- solve(ipd); Bd <- Phid %*% (Pi0 %*% nw$B0 + crossprod(Xd, dy))
   Sd <- crossprod(dy) + nw$S0 + t(nw$B0) %*% Pi0 %*% nw$B0 - t(Bd) %*% ipd %*% Bd; Sd <- (Sd + t(Sd)) / 2
