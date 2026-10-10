@@ -44,7 +44,7 @@ autoplot_dyn <- function(
   rs <- vn[select_vars(responses, vn, "response") %||% seq_along(vn)]
   objs <- c(list(object), compare)
   nms <- names(compare)
-  if (length(compare) && (is.null(nms) || anyNA(nms) || any(nms == ""))) {
+  if (length(compare) && (is.null(nms) || anyNA(nms) || !all(nzchar(nms)))) {
     rlang::abort("`compare` must be a named list of objects.")
   }
   nms <- c("Baseline", nms)

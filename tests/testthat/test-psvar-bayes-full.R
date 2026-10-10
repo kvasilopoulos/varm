@@ -36,7 +36,7 @@ test_that("rotation sampler satisfies exogeneity and Sigma = P P'", {
     -1L,
     0
   )
-  expect_equal(length(o$draw), 15L)
+  expect_length(o$draw, 15L)
   for (a in 1:15) {
     P <- matrix(o$irf[,, a], 3, 3)
     n <- o$draw[a]

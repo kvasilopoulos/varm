@@ -177,7 +177,7 @@ proxy_draws_check <- function(fit) {
 #' set.seed(1)
 #' e <- matrix(rnorm(900), 300)
 #' y <- matrix(0, 300, 3)
-#' for (t in 2:300) y[t, ] <- 0.4 * y[t - 1, ] + e[t, ] %*% t(matrix(c(1, .3, .2, 0, 1, .4, .5, .2, 1), 3))
+#' for (t in 2:300) y[t, ] <- 0.4 * y[t - 1, ] + e[t, ] %*% t(matrix(c(1, 0.3, 0.2, 0, 1, 0.4, 0.5, 0.2, 1), 3))
 #' bf <- bvarm(y, p = 1, ndraw = 300, nburn = 100)
 #' varm_proxy_arw(bf, m = e[, 3] + rnorm(300, sd = 0.5), target = 3, horizon = 8)
 #' }
@@ -316,7 +316,6 @@ proxy_bayes_structural <- function(Bs, Ss, K, p, H, id, varnames) {
   r <- id$r
   fd <- proxy_first_stage_draw(id$fs, N)
   keep <- seq_len(N)
-  rel <- NULL
   if (!is.null(id$reliability)) {
     rel <- vapply(
       keep,
@@ -447,7 +446,7 @@ proxy_bayes_structural <- function(Bs, Ss, K, p, H, id, varnames) {
 #' set.seed(2)
 #' e <- matrix(rnorm(900), 300)
 #' y <- matrix(0, 300, 3)
-#' for (t in 2:300) y[t, ] <- 0.4 * y[t - 1, ] + e[t, ] %*% t(matrix(c(1, .3, .2, 0, 1, .4, .5, .2, 1), 3))
+#' for (t in 2:300) y[t, ] <- 0.4 * y[t - 1, ] + e[t, ] %*% t(matrix(c(1, 0.3, 0.2, 0, 1, 0.4, 0.5, 0.2, 1), 3))
 #' bf <- bvarm(y, p = 1, ndraw = 200, nburn = 100)
 #' S <- matrix(0, 3, 3); S[1, 1] <- 1; S[2, 1] <- 1   # shock 1 raises variables 1 and 2 on impact
 #' varm_proxy_gkr(bf, m = e[, 3] + rnorm(300, sd = 0.5), signs = S, shock = 1, horizon = 6, nq = 50)
@@ -598,7 +597,7 @@ gkr_region <- function(l, u, alpha) {
   k <- which.min(v)
   a <- g[max(1L, k - 1L)]
   b <- g[min(101L, k + 1L)]
-  if (!(a < b)) {
+  if (a >= b) {
     return(c(g[k], v[k]))
   }
   op <- stats::optimize(f, c(a, b))
