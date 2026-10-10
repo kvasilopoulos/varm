@@ -22,52 +22,76 @@ lp(
 )
 }
 \arguments{
-\item{Y}{numeric matrix / data frame (T x K) of responses (and the source of lag controls).}
+\item{Y}{data frame / tibble / matrix (T x K) of responses (and the source of
+lag controls). Non-numeric columns (e.g. a date) are dropped.}
 
-\item{shock}{the shock \eqn{s_t}: a column name/index of \code{Y} (observed shock; unit-impact
-normalisation) or a numeric vector of length T (external shock series, e.g. narrative).}
+\item{shock}{the shock \eqn{s_t}: a variable of \code{Y} (tidyselect; observed
+shock, unit-impact normalisation) or a numeric vector of length T
+(external shock series, e.g. narrative).}
 
 \item{horizon}{maximum horizon H.}
 
 \item{lags}{number of lags of \code{Y} in the controls (and of an external shock).}
 
-\item{contemp}{names/indices of \code{Y} columns entered contemporaneously as controls. For a
-recursive (Cholesky) identification with \code{shock} a column of \code{Y}, list the variables ordered
+\item{contemp}{<\code{\link[tidyselect:language]{tidy-select}}> variables of \code{Y}
+entered contemporaneously as controls. For a recursive (Cholesky)
+identification with \code{shock} a variable of \code{Y}, list the variables ordered
 \emph{before} the shock.}
 
 \item{controls}{optional extra T x q matrix of controls.}
 
-\item{iv}{optional T x q matrix of instruments for \code{shock} (LP-IV; Stock & Watson 2018).}
+\item{iv}{optional T x q matrix of instruments for \code{shock} (LP-IV; Stock &
+Watson 2018).}
 
-\item{responses}{subset of \code{Y} columns to use as responses (default all).}
+\item{responses}{<\code{\link[tidyselect:language]{tidy-select}}> responses to use
+(default all variables of \code{Y}).}
 
-\item{cumulative}{variables whose response is cumulated (\eqn{\sum_{j=0}^h y_{t+j}}), for
-variables measured in differences.}
+\item{cumulative}{<\code{\link[tidyselect:language]{tidy-select}}> variables whose
+response is cumulated (\eqn{\sum_{j=0}^h y_{t+j}}), for variables measured
+in differences.}
 
 \item{se}{\code{"nw"} Newey-West/Bartlett or \code{"hc"} Eicker-Huber-White (HC1).}
 
 \item{nw_lag}{Newey-West truncation lag; default \code{h + 1}.}
 
-\item{lag_augment}{Montiel Olea & Plagborg-Moller (2021) lag augmentation: add one extra lag
-that is not interpreted and use \code{"hc"} standard errors, valid without stationarity
-assumptions and robust at long horizons.}
+\item{lag_augment}{Montiel Olea & Plagborg-Moller (2021) lag augmentation:
+add one extra lag that is not interpreted and use \code{"hc"} standard errors,
+valid without stationarity assumptions and robust at long horizons.}
 
 \item{level}{confidence levels for the pointwise bands.}
 
-\item{dof_adjust}{apply an \code{n/(n-m)} small-sample factor to the Newey-West variance.}
+\item{dof_adjust}{apply an \code{n/(n-m)} small-sample factor to the Newey-West
+variance.}
 }
 \value{
-an \code{lpm} object: \verb{$estimate} (\verb{(H+1) x K}), \verb{$se}, \verb{$bands}, \verb{$nobs}.
+an \code{lpm} object: \verb{$estimate} (\verb{(H+1) x K}), \verb{$se}, \verb{$bands},
+\verb{$nobs}. Use \link[=tidy.lpm]{tidy()} for a tibble and \code{\link[=autoplot]{autoplot()}} for a
+\code{ggplot}.
 }
 \description{
-Jorda (2005) local projections: for each horizon \eqn{h=0,\dots,H} and each response
-\eqn{y_k},
+Jorda (2005) local projections: for each horizon \eqn{h=0,\dots,H} and each
+response \eqn{y_k},
 \deqn{y_{k,t+h} = \alpha_h + \beta_h s_t + \gamma_h' w_t + e_{t+h},}
-where \eqn{s_t} is the shock, \eqn{w_t} the controls (lags of \code{Y}, optional contemporaneous
-variables, extra controls). \eqn{\beta_h} is the impulse response at horizon \eqn{h}.
-The regressions, 2SLS and HAC standard errors run in C++.
+where \eqn{s_t} is the shock, \eqn{w_t} the controls (lags of \code{Y}, optional
+contemporaneous variables, extra controls). \eqn{\beta_h} is the impulse
+response at horizon \eqn{h}. The regressions, 2SLS and HAC standard errors
+run in C++.
 }
 \examples{
-fit <- lp(yraw, shock = "rate", horizon = 12, lags = 2, contemp = c("infl", "unemp"))
+fit <- lp(yraw, shock = rate, horizon = 12, lags = 2, contemp = c(infl, unemp))
 fit
+tidy(fit)
 }
+\seealso{
+Other local projections:
+\code{\link[=autoplot.lpm]{autoplot.lpm()}},
+\code{\link[=compare_lp_var]{compare_lp_var()}},
+\code{\link[=lp_forecast]{lp_forecast()}},
+\code{\link[=lp_joint]{lp_joint()}},
+\code{\link[=lp_panel]{lp_panel()}},
+\code{\link[=lp_smooth]{lp_smooth()}},
+\code{\link[=lp_state]{lp_state()}},
+\code{\link[=lp_supt]{lp_supt()}},
+\code{\link[=tidy.lpm]{tidy.lpm()}}
+}
+\concept{local projections}
