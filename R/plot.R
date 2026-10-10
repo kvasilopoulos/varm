@@ -48,18 +48,22 @@ autoplot_dyn <- function(
     rlang::abort("`compare` must be a named list of objects.")
   }
   nms <- c("Baseline", nms)
-  d <- do.call(
-    rbind,
-    Map(
-      function(o, n) {
-        t <- tidy(o)
-        t$model <- n
-        t
-      },
-      objs,
-      nms
-    )
+  parts <- Map(
+    function(o, n) {
+      t <- tidy(o)
+      t$model <- n
+      t
+    },
+    objs,
+    nms
   )
+  # objects with and without bands have different columns: pad with NA
+  cols <- unique(unlist(lapply(parts, names)))
+  parts <- lapply(parts, function(t) {
+    t[setdiff(cols, names(t))] <- NA
+    t[cols]
+  })
+  d <- do.call(rbind, parts)
   d$model <- factor(d$model, nms)
   d <- d[d$shock %in% sh & d$response %in% rs, ]
   d$shock <- factor(d$shock, sh)
