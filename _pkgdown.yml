@@ -45,6 +45,10 @@ reference:
       - varm_proxy_robust
       - proxy_fstat
 
+  - title: Data
+    contents:
+      - yraw
+
   - title: Plotting and tidying
     contents:
       - plot.varm_dyn

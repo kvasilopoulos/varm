@@ -11,6 +11,9 @@
 #'   impact response of `variable` equals `size` (e.g. a 100bp policy-rate shock).
 #' @param cumulative character/integer vector of variables whose responses are cumulated over
 #'   the horizon (use for variables entered in differences).
+#' @param vol for `bvarm` fits with stochastic volatility: use the `"last"` (final-period) or
+#'   `"mean"` innovation covariance.
+#' @param .fevd internal; compute the variance decomposition instead of the IRF.
 #' @param ... passed to methods.
 #' @return `varm_irf` / `varm_fevd` objects with `$estimate` (`[K, K, H+1]`, response x shock x horizon;
 #'   median across draws when draws exist) and `$bands` (`[K, K, H+1, 2*length(level)]`).
@@ -280,7 +283,6 @@ fevd.varm <- function(object, id = id_chol(), horizon = 20L, ...) {
 }
 
 #' @rdname dynamics
-#' @param draw index of the retained rotation to use (default: Fry-Pagan median-target) for sign restrictions.
 #' @export
 hd.varm <- function(object, id = id_chol(), ...) {
   K <- object$K
@@ -288,12 +290,13 @@ hd.varm <- function(object, id = id_chol(), ...) {
   pt <- point_draws(object)
   if (id$type == "sign") {
     si <- structural_irf(pt$B, pt$Sigma, K, p, 0L, id, object$varnames)
-    P <- si$P[,, 1]
+    P <- matrix(si$P[,, 1], K, K)
   } else {
-    P <- structural_irf(pt$B, pt$Sigma, K, p, 0L, id, object$varnames)$irf[,,
-      1,
-      1
-    ]
+    P <- matrix(
+      structural_irf(pt$B, pt$Sigma, K, p, 0L, id, object$varnames)$irf[,, 1, 1],
+      K,
+      K
+    )
   }
   contrib <- cpp_hd(object$B, object$U, P, K, p)
   dimnames(contrib) <- list(NULL, object$varnames, object$varnames)

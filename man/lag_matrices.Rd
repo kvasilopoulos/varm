@@ -8,6 +8,8 @@ lag_matrices(object, ...)
 }
 \arguments{
 \item{object}{a \code{varm}/\code{bvarm} object or a coefficient matrix.}
+
+\item{...}{unused.}
 }
 \value{
 array \verb{[K, K, p]} with \code{A[,,l]} the coefficient matrix on lag \code{l}

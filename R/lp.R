@@ -29,7 +29,7 @@
 #' @param dof_adjust apply an `n/(n-m)` small-sample factor to the Newey-West variance.
 #' @return an `lpm` object: `$estimate` (`(H+1) x K`), `$se`, `$bands`, `$nobs`.
 #' @examples
-#' fit <- lp(yraw, shock = "V3", horizon = 12, lags = 2, contemp = c("V1", "V2"))
+#' fit <- lp(yraw, shock = "rate", horizon = 12, lags = 2, contemp = c("infl", "unemp"))
 #' fit
 #' @export
 lp <- function(
@@ -50,6 +50,9 @@ lp <- function(
 ) {
   cl <- match.call()
   se <- match.arg(se)
+  if (lags < 1) {
+    stop("`lags` must be >= 1", call. = FALSE)
+  }
   Y <- as_data_matrix(Y)
   n <- nrow(Y)
   vn <- colnames(Y)

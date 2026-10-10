@@ -68,6 +68,6 @@ variables, extra controls). \eqn{\beta_h} is the impulse response at horizon \eq
 The regressions, 2SLS and HAC standard errors run in C++.
 }
 \examples{
-fit <- lp(yraw, shock = "V3", horizon = 12, lags = 2, contemp = c("V1", "V2"))
+fit <- lp(yraw, shock = "rate", horizon = 12, lags = 2, contemp = c("infl", "unemp"))
 fit
 }

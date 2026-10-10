@@ -18,6 +18,8 @@ draws(object, ...)
 \arguments{
 \item{object}{a \code{varm} fit.}
 
+\item{...}{unused.}
+
 \item{method}{\code{"bootstrap"} (recursive-design residual bootstrap), \code{"wild"}
 (Rademacher wild bootstrap, robust to conditional heteroskedasticity),
 \code{"wild_mammen"} or \code{"mc"} (asymptotic normal / inverse-Wishart Monte Carlo).}

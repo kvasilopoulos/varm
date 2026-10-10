@@ -11,6 +11,7 @@
 #'   `"wild_mammen"` or `"mc"` (asymptotic normal / inverse-Wishart Monte Carlo).
 #' @param n number of draws.
 #' @param bias_correct apply Kilian (1998) bootstrap-after-bootstrap bias correction.
+#' @param ... unused.
 #' @export
 draws <- function(object, ...) UseMethod("draws")
 

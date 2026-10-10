@@ -80,6 +80,9 @@ forecast(object, ...)
 
 \item{...}{passed to methods.}
 
+\item{vol}{for \code{bvarm} fits with stochastic volatility: use the \code{"last"} (final-period) or
+\code{"mean"} innovation covariance.}
+
 \item{h}{forecast horizon (steps).}
 
 \item{exog_future}{\verb{h x q} matrix of future exogenous regressors (if \code{exog} was used).}
@@ -98,13 +101,13 @@ impact response of \code{variable} equals \code{size} (e.g. a 100bp policy-rate 
 \item{cumulative}{character/integer vector of variables whose responses are cumulated over
 the horizon (use for variables entered in differences).}
 
+\item{.fevd}{internal; compute the variance decomposition instead of the IRF.}
+
 \item{ci}{for \code{varm}: \code{"bootstrap"}, \code{"wild"}, \code{"wild_mammen"}, \code{"mc"} or \code{"none"}.}
 
 \item{nboot}{number of bootstrap / Monte Carlo draws.}
 
 \item{bias_correct}{Kilian bias correction (bootstrap only).}
-
-\item{draw}{index of the retained rotation to use (default: Fry-Pagan median-target) for sign restrictions.}
 }
 \value{
 \code{varm_irf} / \code{varm_fevd} objects with \verb{$estimate} (\verb{[K, K, H+1]}, response x shock x horizon;
