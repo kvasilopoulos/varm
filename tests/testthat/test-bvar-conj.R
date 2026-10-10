@@ -42,6 +42,11 @@ test_that("hierarchical NIW log-posterior matches BVAR at its optimum", {
     TRUE,
     b,
     1e7,
+    # BVAR builds its dummy rows from the first p rows of the regression
+    # sample; bvarm() defaults to the p presample rows (BEAR/Sims convention),
+    # so pass BVAR's convention explicitly to compare the formulas
+    colMeans(ols$Y[seq_len(p), , drop = FALSE]),
+    1,
     c(1L, 0L, 1L, 1L, 0L, 0L, 0L),
     gp,
     c(1e-4, 1, 1e-4, 1e-4, 0, 0, 0),

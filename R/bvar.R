@@ -171,7 +171,9 @@ bvarm <- function(
     d = ncol(det),
     has_const = const,
     b = b,
-    vard = prior$var
+    vard = prior$var,
+    ybar = colMeans(Y[seq_len(p), , drop = FALSE]),
+    xbar = colMeans(det[seq_len(p), , drop = FALSE])
   )
   fit <- if (any(spec$isfree)) {
     niw_hierarchical(spec, args, ndraw, nburn, scale, adapt)

@@ -11,7 +11,8 @@ struct NIWSpec {
   int M, p, d;        // variables, lags, deterministic columns
   bool has_const;
   arma::mat Y, X;     // regression sample (T x M, T x K)
-  arma::vec ybar;     // mean of the first p observations (for dummy priors)
+  arma::vec ybar;     // mean of the p presample observations (for dummy priors)
+  arma::vec xbar;     // mean of the presample deterministic/exogenous columns (length d)
   arma::mat b;        // prior mean (K x M)
   double vard;        // prior variance for deterministic coefficients
 };
@@ -45,7 +46,7 @@ NIWPost niw_eval(const NIWSpec& s, double lambda, double alpha, const arma::vec&
     arma::rowvec ys = s.ybar.t() / th;
     arma::rowvec xs(K, arma::fill::zeros);
     for (int l = 0; l < p; ++l) xs.subvec(l * M, (l + 1) * M - 1) = ys;
-    xs(M * p) = 1.0 / th;   // constant is the first deterministic column
+    for (int j = 0; j < s.d; ++j) xs(M * p + j) = s.xbar(j) / th;   // constant (=1) and exogenous columns
     Yd = arma::join_cols(Yd, ys);
     Xd = arma::join_cols(Xd, xs);
   }
@@ -86,7 +87,7 @@ NIWPost niw_eval(const NIWSpec& s, double lambda, double alpha, const arma::vec&
   out.logml = lml(N, oev, pev);
   if (Nd > 0) {
     arma::mat b2, sse2, pen2; arma::vec oev2, pev2;
-    ev(Yd, Xd, false, b2, sse2, pen2, oev2, pev2);
+    ev(Yd, Xd, true, b2, sse2, pen2, oev2, pev2);   // p(dummies) needs its own posterior update
     out.logml -= lml(Nd, oev2, pev2);
   }
   out.nu = N + M + 2;
@@ -117,11 +118,11 @@ void niw_draw(const NIWPost& P, arma::mat& B, arma::mat& Sig) {
 }
 
 NIWSpec make_spec(const arma::mat& Y, const arma::mat& X, int p, int d, bool has_const, const arma::mat& b,
-                  double vard) {
+                  double vard, const arma::vec& ybar, const arma::vec& xbar) {
   NIWSpec s;
   s.M = Y.n_cols; s.p = p; s.d = d; s.has_const = has_const;
   s.Y = Y; s.X = X; s.b = b; s.vard = vard;
-  s.ybar = arma::mean(Y.rows(0, p - 1), 0).t();
+  s.ybar = ybar; s.xbar = xbar;
   return s;
 }
 
@@ -152,18 +153,19 @@ double log_post(const NIWSpec& s, const arma::vec& h, const arma::uvec& isfree, 
 // Log marginal likelihood (+ hyperprior if eval_only_ml = false) at a given hyperparameter vector
 // [[Rcpp::export]]
 double cpp_niw_logpost(const arma::vec& h, const arma::mat& Y, const arma::mat& X, int p, int d,
-                       bool has_const, const arma::mat& b, double vard, const arma::uvec& isfree,
+                       bool has_const, const arma::mat& b, double vard, const arma::vec& ybar,
+                       const arma::vec& xbar, const arma::uvec& isfree,
                        const arma::mat& gp, const arma::vec& lo, const arma::vec& hi, const arma::vec& ig,
                        bool eval_only_ml) {
-  NIWSpec s = make_spec(Y, X, p, d, has_const, b, vard);
+  NIWSpec s = make_spec(Y, X, p, d, has_const, b, vard, ybar, xbar);
   return log_post(s, h, isfree, gp, lo, hi, ig, eval_only_ml, nullptr);
 }
 
 // Posterior draws at fixed hyperparameters (direct sampling: no MCMC needed)
 // [[Rcpp::export]]
 List cpp_niw_fixed(const arma::vec& h, const arma::mat& Y, const arma::mat& X, int p, int d, bool has_const,
-                   const arma::mat& b, double vard, int ndraw) {
-  NIWSpec s = make_spec(Y, X, p, d, has_const, b, vard);
+                   const arma::mat& b, double vard, const arma::vec& ybar, const arma::vec& xbar, int ndraw) {
+  NIWSpec s = make_spec(Y, X, p, d, has_const, b, vard, ybar, xbar);
   arma::vec psi = h.subvec(4, h.n_elem - 1);
   NIWPost P = niw_eval(s, h(0), h(1), psi, h(2), h(3));
   const int K = X.n_cols, M = Y.n_cols;
@@ -181,10 +183,11 @@ List cpp_niw_fixed(const arma::vec& h, const arma::mat& Y, const arma::mat& X, i
 // retained iteration. Proposal covariance `prop` (nfree x nfree) is scaled adaptively during burn-in.
 // [[Rcpp::export]]
 List cpp_niw_hier(const arma::vec& h0, const arma::mat& Y, const arma::mat& X, int p, int d, bool has_const,
-                  const arma::mat& b, double vard, const arma::uvec& isfree, const arma::mat& gp,
+                  const arma::mat& b, double vard, const arma::vec& ybar, const arma::vec& xbar,
+                  const arma::uvec& isfree, const arma::mat& gp,
                   const arma::vec& lo, const arma::vec& hi, const arma::vec& ig, const arma::mat& prop,
                   int niter, int nburn, double scale, bool adapt, double acc_lo, double acc_hi) {
-  NIWSpec s = make_spec(Y, X, p, d, has_const, b, vard);
+  NIWSpec s = make_spec(Y, X, p, d, has_const, b, vard, ybar, xbar);
   const arma::uvec idx = arma::find(isfree);
   const int nf = idx.n_elem, K = X.n_cols, M = Y.n_cols;
   arma::mat Lp = arma::chol(prop, "lower");
