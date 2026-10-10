@@ -155,6 +155,11 @@
 <dd><p>passed to methods.</p></dd>
 
 
+<dt id="arg-vol">vol<a class="anchor" aria-label="anchor" href="#arg-vol"></a></dt>
+<dd><p>for <code>bvarm</code> fits with stochastic volatility: use the <code>"last"</code> (final-period) or
+<code>"mean"</code> innovation covariance.</p></dd>
+
+
 <dt id="arg-h">h<a class="anchor" aria-label="anchor" href="#arg-h"></a></dt>
 <dd><p>forecast horizon (steps).</p></dd>
 
@@ -189,6 +194,10 @@ impact response of <code>variable</code> equals <code>size</code> (e.g. a 100bp 
 the horizon (use for variables entered in differences).</p></dd>
 
 
+<dt id="arg--fevd">.fevd<a class="anchor" aria-label="anchor" href="#arg--fevd"></a></dt>
+<dd><p>internal; compute the variance decomposition instead of the IRF.</p></dd>
+
+
 <dt id="arg-ci">ci<a class="anchor" aria-label="anchor" href="#arg-ci"></a></dt>
 <dd><p>for <code>varm</code>: <code>"bootstrap"</code>, <code>"wild"</code>, <code>"wild_mammen"</code>, <code>"mc"</code> or <code>"none"</code>.</p></dd>
 
@@ -199,10 +208,6 @@ the horizon (use for variables entered in differences).</p></dd>
 
 <dt id="arg-bias-correct">bias_correct<a class="anchor" aria-label="anchor" href="#arg-bias-correct"></a></dt>
 <dd><p>Kilian bias correction (bootstrap only).</p></dd>
-
-
-<dt id="arg-draw">draw<a class="anchor" aria-label="anchor" href="#arg-draw"></a></dt>
-<dd><p>index of the retained rotation to use (default: Fry-Pagan median-target) for sign restrictions.</p></dd>
 
 </dl></div>
     <div id="value">
