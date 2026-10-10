@@ -92,7 +92,7 @@ Other local projections:
 compare_lp_var(yraw, shock = unemp, horizon = 12, lags = 2)
 #> <lp_var_cmp> shock 'unemp', 2 lags; mean |LP - VAR| / se_LP by horizon block:
 #>         infl  rate unemp
-#> short  0.252 0.276 0.377
+#> short  0.274 0.276 0.701
 #> medium 0.498 0.152 0.344
 #> long   0.189 0.519 0.500
 ```

@@ -135,7 +135,7 @@ tidy(fit)
 #> # A tibble: 78 × 7
 #>    horizon response  estimate std.error level  conf.low conf.high
 #>      <int> <fct>        <dbl>     <dbl> <dbl>     <dbl>     <dbl>
-#>  1       0 infl      1.51e-14  9.62e-14   0.9 -1.43e-13  1.73e-13
+#>  1       0 infl     -1.24e-14  1.37e-13   0.9 -2.39e-13  2.14e-13
 #>  2       1 infl     -5.89e- 2  4.20e- 2   0.9 -1.28e- 1  1.01e- 2
 #>  3       2 infl     -6.16e- 2  7.23e- 2   0.9 -1.81e- 1  5.74e- 2
 #>  4       3 infl     -3.15e- 2  1.05e- 1   0.9 -2.04e- 1  1.41e- 1

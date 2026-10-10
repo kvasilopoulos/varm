@@ -83,6 +83,6 @@ ggplot2::autoplot(r, ci = "line")
 
 r2 <- irf(varm(yraw, p = 4), horizon = 8, ci = "none")
 ggplot2::autoplot(r, compare = list("p = 4" = r2), ci = "none")
-#> Error in rbind(deparse.level, ...): numbers of columns of arguments do not match
+
 ggplot2::autoplot(fevd(fit, horizon = 8, ci = "none"))
 ```

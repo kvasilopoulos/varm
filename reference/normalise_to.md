@@ -38,12 +38,12 @@ normalise_to(rate, rate, size = 2)
 #> $shock
 #> <quosure>
 #> expr: ^rate
-#> env:  0x55ab52c950a0
+#> env:  0x5598d3fc2728
 #> 
 #> $variable
 #> <quosure>
 #> expr: ^rate
-#> env:  0x55ab52c950a0
+#> env:  0x5598d3fc2728
 #> 
 #> $size
 #> [1] 2

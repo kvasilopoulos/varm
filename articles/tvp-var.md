@@ -261,7 +261,7 @@ fit
 #>   coefficients: time-varying; A_t: time-varying; volatility: stochastic
 #>   1000 retained draws, 200 stored paths
 round(unname(t_fit["elapsed"]) / 4, 1)   # seconds per fit
-#> [1] 2
+#> [1] 3.1
 ```
 
 ``` r
@@ -814,7 +814,7 @@ built this vignette:
 t_long <- system.time(tvpvar(yt, p = 2, ndraw = 10000, nburn = 2000))[["elapsed"]]
 c(seconds = t_long, ms_per_sweep = 1000 * t_long / 12000)
 #>      seconds ms_per_sweep 
-#>     16.13100      1.34425
+#>      24.3540       2.0295
 ```
 
 The cost is linear in $`T`$ and increases quickly with the state
