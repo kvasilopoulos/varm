@@ -9,15 +9,18 @@ proxy_fstat(fit, m, target = 1L, nwlags = NULL)
 \arguments{
 \item{fit}{a \code{\link[=varm]{varm()}} object.}
 
-\item{m}{proxy: numeric vector (or one-column matrix) of length \code{nrow(fit$Y)}, aligned with
-the data (the first \code{p} values are dropped to match the residuals).}
+\item{m}{proxy: numeric vector, or \verb{T x r} matrix of \code{r} proxies, aligned with
+the data (the first \code{p} rows are dropped to match the residuals).}
 
-\item{target}{variable (name or position) whose impact response is normalised to \code{size}.}
+\item{target}{variable(s) (name or position) whose impact response is normalised to \code{size};
+length \code{r}.}
 
 \item{nwlags}{Newey-West truncation lag for \code{F_hac}; default \code{floor(4 * (T/100)^(2/9))}.}
 }
 \value{
-named numeric \code{c(F = , F_robust = , F_hac = )}.
+named numeric \code{c(F = , F_robust = , F_hac = )}. With several instruments (\code{m} a matrix,
+\code{target} of the same length) a matrix with one row per target; \code{F}/\code{F_robust} are then joint
+statistics over the instruments and \code{F_hac} is \code{NA} (the MOSW sets are single-instrument).
 }
 \description{
 Three F statistics for the relevance of the proxy for the \code{target} shock:

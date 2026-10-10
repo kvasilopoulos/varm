@@ -2,7 +2,7 @@
 % Please edit documentation in R/psvar.R
 \name{varm_proxy}
 \alias{varm_proxy}
-\title{Proxy-SVAR (external instrument) identification}
+\title{Proxy-SVAR (external instrument) identification and bootstrap inference}
 \usage{
 varm_proxy(
   fit,
@@ -11,40 +11,85 @@ varm_proxy(
   size = 1,
   horizon = 20L,
   nboot = 500L,
-  level = c(0.68, 0.9)
+  level = c(0.68, 0.9),
+  method = c("mbb", "wild", "wild_normal"),
+  block = NULL
 )
 }
 \arguments{
 \item{fit}{a \code{\link[=varm]{varm()}} object.}
 
-\item{m}{proxy: numeric vector (or one-column matrix) of length \code{nrow(fit$Y)}, aligned with
-the data (the first \code{p} values are dropped to match the residuals).}
+\item{m}{proxy: numeric vector, or \verb{T x r} matrix of \code{r} proxies, aligned with
+the data (the first \code{p} rows are dropped to match the residuals).}
 
-\item{target}{variable (name or position) whose impact response is normalised to \code{size}.}
+\item{target}{variable(s) (name or position) whose impact response is normalised to \code{size};
+length \code{r}.}
 
-\item{size}{size of the shock (impact response of \code{target}).}
+\item{size}{size of the shock (impact response of \code{target}); scalar or length \code{r}.}
 
 \item{horizon}{maximum horizon (impact is 0).}
 
-\item{nboot}{number of wild-bootstrap draws (\code{0} for point estimates only).}
+\item{nboot}{number of bootstrap draws (\code{0} for point estimates only).}
 
 \item{level}{confidence levels; bands are equal-tailed percentiles.}
+
+\item{method}{\code{"mbb"} (default), \code{"wild"} or \code{"wild_normal"}; see Details.}
+
+\item{block}{moving-block length for \code{method = "mbb"} (default Jentsch-Lunsford rule).}
 }
 \value{
-a \code{varm_proxy} object: \code{estimate} (\verb{(H+1) x K}), \code{draws} (\verb{(H+1) x K x nboot}),
-\code{bands} (\verb{(H+1) x K x 2*length(level)}), \code{gamma}, \code{fstat} (see \code{\link[=proxy_fstat]{proxy_fstat()}}).
+a \code{varm_proxy} object. For \code{r = 1}: \code{estimate} (\verb{(H+1) x K}), \code{draws}
+(\verb{(H+1) x K x nboot}), \code{bands} (\verb{(H+1) x K x 2*length(level)}). For \code{r > 1} each gains a
+shock dimension after \code{K}. Also \code{gamma} (impact covariance with the proxy), \code{fstat} (see
+\code{\link[=proxy_fstat]{proxy_fstat()}}), \code{B1} (unit-variance impact matrix, \code{NULL} if not computable),
+\code{shocks}, \code{reliability}, \code{method}, \code{block}.
 }
 \description{
-Mertens & Ravn (2013) / Stock & Watson (2012) proxy identification of one structural
-shock in a reduced-form \code{\link[=varm]{varm()}} fit. The impact vector is \eqn{\gamma = T^{-1}\sum_t u_t m_t}
-(covariance of the reduced-form residuals with the proxy), scaled so that the impact
-response of \code{target} equals \code{size}. Responses are \eqn{\Theta_h \gamma}, reusing the
-MA machinery of \code{\link[=irf]{irf()}}. Bands come from the proxy wild bootstrap (Rademacher weights
-applied jointly to the residuals and the proxy, Jentsch & Lunsford 2019).
+Mertens & Ravn (2013) / Stock & Watson (2012) proxy identification of \code{r} structural
+shocks in a reduced-form \code{\link[=varm]{varm()}} fit, using \code{r} external instruments. With one instrument
+the impact vector is \eqn{\gamma = T^{-1}\sum_t u_t m_t} (covariance of the reduced-form
+residuals with the proxy), scaled so that the impact response of \code{target} equals \code{size}.
+Responses are \eqn{\Theta_h \gamma}, reusing the MA machinery of \code{\link[=irf]{irf()}}. With \code{r > 1}
+instruments the Mertens-Ravn (2013) \code{B11}/\code{B21} formulae are used (see Details).
 }
 \details{
-This does not fit the \verb{id_*} interface because \code{\link[=irf]{irf()}} maps \verb{(B, Sigma)} to impact
-matrices, whereas a proxy also needs the residuals and the instrument.
+\strong{Inference (\code{method}).}
+\describe{
+\item{\code{"wild"}}{Mertens & Ravn (2013) / Gertler & Karadi (2015)-style recursive-design
+wild bootstrap: Rademacher weights multiply the residuals and the proxy jointly.}
+\item{\code{"wild_normal"}}{same with standard-normal weights (the other variant studied
+by Jentsch & Lunsford).}
+\item{\code{"mbb"}}{residual-based moving block bootstrap of Jentsch & Lunsford: blocks
+of length \code{block} are drawn jointly from the residuals and the proxy, each is
+recentred by the mean of the corresponding within-block position over all
+blocks, the VAR is re-simulated recursively and re-estimated. Block length default is
+the Jentsch-Lunsford rule \eqn{\ell = 5.03\,T^{1/4}} (\eqn{\ell = 20} at
+\eqn{T = 250}).}
+}
+Jentsch & Lunsford (2019, 2022) show that the wild bootstrap is asymptotically \emph{invalid} for
+proxy-SVAR impulse responses, because multiplying residuals and proxy by the same weight
+leaves the sample covariance \eqn{T^{-1}\sum m_t u_t'} (almost) fixed, so the sampling
+variability of the impact vector is not reproduced, and that the moving block bootstrap
+is valid. Mertens & Ravn (2019) dispute the practical conclusions. The wild bootstrap
+remains available (\code{method = "wild"}) to reproduce Mertens-Ravn / Gertler-Karadi bands.
+\strong{The default changed from \code{"wild"} to \code{"mbb"}} on the strength of that theory and of the
+Monte Carlo in \code{validation/proxy-coverage.R} (wild-bootstrap 90\% coverage of the impact
+response of a non-target variable was about 14\% vs 87\% for the block bootstrap). Neither bootstrap is robust to weak instruments
+(\code{\link[=varm_proxy_robust]{varm_proxy_robust()}} is). Intervals are equal-tailed percentiles, as in the papers.
+
+\strong{Several instruments.} \code{m} may be a \verb{T x r} matrix and \code{target} a vector of \code{r}
+variables: \code{r} instruments identify \code{r} shocks. As in the Mertens-Ravn algorithm
+(and the SVAR-IV MATLAB code of Miranda-Agrippino), the shocks are identified up to a
+Cholesky-type restriction within the block of \code{target} variables, so the order of \code{target}
+matters. The impact matrix is normalised so that column \code{i} has impact \code{size[i]} on
+\code{target[i]}. Missing instrument values must be zero-filled (this leaves the normalised
+responses unchanged); NA are rejected.
+
+The extra output \code{shocks} (realised unit-variance structural shocks, \eqn{\varepsilon_t =
+B_1'\Sigma_u^{-1}u_t}) and \code{reliability} (squared correlation of the instrument with the
+shock; squared canonical correlations if \code{r > 1}) are sample objects computed from the
+point estimates, valid when the instrument is relevant and exogenous; no censoring
+adjustment is made.
 }
 \examples{
 set.seed(1)
@@ -53,4 +98,18 @@ y <- matrix(0, 200, 2)
 for (t in 2:200) y[t, ] <- 0.5 * y[t - 1, ] + c(e[t, 1] + 0.3 * e[t, 2], e[t, 2] + 0.5 * e[t, 1])
 fit <- varm(y, p = 1)
 varm_proxy(fit, m = e[, 1] + rnorm(200, sd = 0.5), horizon = 8, nboot = 100)
+varm_proxy(fit, m = e[, 1] + rnorm(200, sd = 0.5), horizon = 8, nboot = 100, method = "mbb")
+}
+\references{
+Mertens, K. and Ravn, M. O. (2013). The dynamic effects of personal and corporate
+income tax changes in the United States. \emph{AER} 103(4), 1212-1247.
+
+Jentsch, C. and Lunsford, K. G. (2019). The dynamic effects of personal and corporate
+income tax changes in the United States: comment. \emph{AER} 109(7), 2655-2678.
+
+Jentsch, C. and Lunsford, K. G. (2022). Asymptotically valid bootstrap inference for
+proxy SVARs. \emph{Journal of Business & Economic Statistics} (2022; working paper version: Cleveland Fed WP 16-19).
+}
+\seealso{
+\code{\link[=varm_proxy_robust]{varm_proxy_robust()}}, \code{\link[=varm_proxy_bayes]{varm_proxy_bayes()}}, \code{\link[=lp]{lp()}} (LP-IV)
 }

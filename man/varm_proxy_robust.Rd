@@ -17,12 +17,13 @@ varm_proxy_robust(
 \arguments{
 \item{fit}{a \code{\link[=varm]{varm()}} object.}
 
-\item{m}{proxy: numeric vector (or one-column matrix) of length \code{nrow(fit$Y)}, aligned with
-the data (the first \code{p} values are dropped to match the residuals).}
+\item{m}{proxy: numeric vector, or \verb{T x r} matrix of \code{r} proxies, aligned with
+the data (the first \code{p} rows are dropped to match the residuals).}
 
-\item{target}{variable (name or position) whose impact response is normalised to \code{size}.}
+\item{target}{variable(s) (name or position) whose impact response is normalised to \code{size};
+length \code{r}.}
 
-\item{size}{size of the shock (impact response of \code{target}).}
+\item{size}{size of the shock (impact response of \code{target}); scalar or length \code{r}.}
 
 \item{horizon}{maximum horizon (impact is 0).}
 

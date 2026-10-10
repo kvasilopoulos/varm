@@ -151,3 +151,105 @@ test_that("varm_proxy_robust agrees with psvar (impact and first horizon; bound 
   expect_equal(unname(r$lower[1:2, , 1]), unname(lo[1:2, ]), tolerance = 1e-8)
   expect_equal(unname(r$upper[1:2, , 1]), unname(hi[1:2, ]), tolerance = 1e-8)
 })
+
+# ---- bootstrap methods, multiple instruments, Bayesian proxy, LP-IV ---------
+
+test_that("moving block bootstrap: shapes, recentring and reproducibility", {
+  s <- sim_proxy(300)
+  fit <- varm(s$Y, p = 2)
+  set.seed(2)
+  r <- varm_proxy(fit, s$m, horizon = 5, nboot = 40, method = "mbb")
+  expect_equal(dim(r$bands), c(6, 2, 4))
+  expect_equal(dim(r$draws), c(6, 2, 40))
+  expect_equal(r$block, round(5.03 * 298^0.25))
+  expect_equal(unname(r$estimate[1, 1]), 1)
+  expect_true(all(r$bands[, , "0.05"] <= r$bands[, , "0.95"]))
+  # default is mbb; point estimates do not depend on the method
+  expect_equal(varm_proxy(fit, s$m, horizon = 5, nboot = 3)$method, "mbb")
+  w <- varm_proxy(fit, s$m, horizon = 5, nboot = 10, method = "wild")
+  expect_equal(w$method, "wild")
+  expect_equal(w$estimate, r$estimate)
+  expect_error(varm_proxy(fit, s$m, nboot = 5, method = "nope"))
+  # normal wild runs too
+  expect_equal(
+    dim(varm_proxy(fit, s$m, horizon = 3, nboot = 5, method = "wild_normal")$draws),
+    c(4, 2, 5)
+  )
+})
+
+test_that("block resampling is centred: bootstrap residual means are ~0 over positions", {
+  U <- matrix(rnorm(400, 3), 200)
+  ell <- 10
+  nb <- 200 - ell + 1
+  cU <- do.call(rbind, lapply(1:ell, function(s) colMeans(U[s:(s + nb - 1), ])))
+  expect_equal(dim(cU), c(ell, 2))
+  expect_true(all(abs(cU - 3) < 0.5))
+})
+
+test_that("multiple instruments recover the true impact columns (large T)", {
+  set.seed(11)
+  Tn <- 20000
+  K <- 3
+  B <- matrix(c(1, 0.4, 0.3, 0, 0.8, -0.5, 0.2, 0.1, 0.9), 3, 3) # B[1:2,1:2] lower-triangular
+  e <- matrix(rnorm(Tn * K), Tn)
+  u <- e %*% t(B)
+  Y <- matrix(0, Tn, K, dimnames = list(NULL, c("a", "b", "c")))
+  A <- diag(0.3, K)
+  for (t in 2:Tn) Y[t, ] <- A %*% Y[t - 1, ] + u[t, ]
+  M <- cbind(e[, 1] + 0.3 * e[, 2] + rnorm(Tn, sd = 0.7), e[, 2] + rnorm(Tn, sd = 0.7))
+  fit <- varm(Y, p = 1)
+  r <- varm_proxy(fit, M, target = c("a", "b"), size = c(1, 2), horizon = 2, nboot = 0)
+  expect_equal(dim(r$estimate), c(3, 3, 2))
+  # Mertens-Ravn identifies the first r impact columns only up to a rotation Q, so test
+  # rotation-invariant objects: B1 B1' (the covariance share of the r shocks) and the span
+  expect_equal(unname(tcrossprod(r$B1)), unname(tcrossprod(B[, 1:2])), tolerance = 0.05)
+  expect_equal(unname(cov(r$shocks)), diag(2), tolerance = 0.05)
+  R2 <- summary(lm(r$shocks ~ e[-1, 1:2]))
+  expect_true(all(vapply(R2, function(z) z$r.squared, 0) > 0.98))
+  # normalisation: column i has impact size[i] on target[i]
+  expect_equal(unname(diag(r$estimate[1, 1:2, ])), c(1, 2))
+  # the 2x2 impact block is a scaled copy of B1[1:2, ]
+  expect_equal(
+    unname(r$estimate[1, , ]),
+    unname(sweep(r$B1, 2, c(1, 2) / diag(r$B1[1:2, ]), "*"))
+  )
+  expect_equal(dim(r$fstat), c(2, 3))
+  rb <- varm_proxy(fit, M, target = c("a", "b"), horizon = 2, nboot = 5, method = "mbb")
+  expect_equal(dim(rb$bands), c(3, 3, 2, 4))
+  expect_error(varm_proxy(fit, M, target = "a"), "one distinct variable")
+})
+
+test_that("single-instrument impact vector equals the Mertens-Ravn B1 direction; reliability is cor^2", {
+  s <- sim_proxy(500)
+  fit <- varm(s$Y, p = 2)
+  r <- varm_proxy(fit, s$m, nboot = 0, horizon = 1)
+  expect_equal(
+    unname(r$B1[, 1] / r$B1[1, 1]),
+    unname(r$gamma / r$gamma[1])
+  )
+  expect_equal(r$reliability, unname(cor(s$m[-(1:2)], r$shocks[, 1])^2))
+  expect_true(r$reliability > 0.9 && r$reliability < 1)
+})
+
+test_that("Bayesian proxy-SVAR gives bands close to the bootstrap with a strong proxy", {
+  s <- sim_proxy(300)
+  set.seed(4)
+  bf <- bvarm(s$Y, p = 2, ndraw = 300, nburn = 100)
+  b <- varm_proxy_bayes(bf, s$m, horizon = 4, ndraw = 150)
+  expect_s3_class(b, "varm_proxy")
+  expect_equal(b$method, "bayes")
+  expect_equal(dim(b$bands), c(5, 2, 4))
+  expect_equal(unname(b$estimate[1, 1]), 1)
+  fit <- varm(s$Y, p = 2)
+  f <- varm_proxy(fit, s$m, horizon = 4, nboot = 0)
+  expect_equal(unname(b$estimate), unname(f$estimate), tolerance = 0.15)
+  expect_error(varm_proxy_bayes(fit, s$m), "bvarm")
+})
+
+test_that("LP-IV via lp(iv=) agrees with the proxy-VAR impact response for a strong proxy", {
+  s <- sim_proxy(2000)
+  l <- lp(s$Y, shock = "y1", iv = matrix(s$m, ncol = 1), horizon = 4, lags = 2)
+  fit <- varm(s$Y, p = 2)
+  f <- varm_proxy(fit, s$m, horizon = 4, nboot = 0)
+  expect_equal(unname(l$estimate[, "y2"]), unname(f$estimate[, 2]), tolerance = 0.08)
+})
