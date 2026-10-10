@@ -23,7 +23,6 @@
 ^rv$
 ^rv\.lock$
 ^\.Rprofile$
-^figure$
 ^rv$
 ^rv\.lock$
 ^rproject\.toml$
