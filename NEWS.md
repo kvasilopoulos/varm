@@ -2,6 +2,17 @@
 
 First release. The package is experimental: the API may still change.
 
+## Bayesian VAR fixes
+
+* `bvarm()` sum-of-coefficients and single-unit-root dummy priors now use the
+  `p` presample observations (as in BEAR, Sims and GLP) instead of observations
+  `p + 1` to `2p`.
+* The single-unit-root dummy now covers exogenous and deterministic regressors,
+  not only the constant.
+* The marginal likelihood with dummy priors now updates the dummy block's
+  posterior; hierarchical `soc` / `sur` hyperparameter inference changes
+  accordingly.
+
 ## 0.1.0 API notes
 
 The API was refactored to tidy principles and ggplot2. Outputs now follow broom

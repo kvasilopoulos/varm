@@ -254,8 +254,8 @@ runs.
 
 Checks run live in the [validation
 report](https://kvasilopoulos.github.io/varm/articles/validation.html); the
-longer ones are in `validation/`. The unit-test suite (`tests/testthat`) has 65
-tests and 728 expectations and runs in about 17 s.
+longer ones are in `validation/`. The unit-test suite (`tests/testthat`) has 846
+expectations and runs in about 17 s.
 
 | Module | Reference | Agreement (max abs. difference unless stated) |
 |---|---|---|
@@ -270,6 +270,18 @@ tests and 728 expectations and runs in about 17 s.
 | Stochastic-volatility update | Geweke joint-distribution test | all absolute $z$ below 1.1 |
 | Haar rotations, sign-restriction acceptance rates | exact laws (KS, $1/2$, $1/4$) | KS statistic 0.003 or less |
 | TVP-VAR, constant limit | OLS | 4e-3 (Monte Carlo error) |
+| OLS VAR, NW posterior, Cholesky IRF, FEVD, HD, sign and zero restrictions | BEAR toolbox (MATLAB), via R ports checked against BEAR's stored `.mat` results | 1e-12 or better; sampled quantities within Monte Carlo error |
+| Minnesota NW marginal likelihood and posterior, with and without dummy priors | BEAR toolbox | no dummies 1e-9; sum-of-coefficients 1e-9; combined dummies 0.05 log units (open) |
+| Cholesky and long-run IRF, FEVD, HD, LP, IV-LP | VAR-Toolbox (MATLAB), via R ports | 1e-5 or better (3e-14 for long-run) |
+| Minnesota marginal likelihood, IRF, forecasts, proxy-SVAR, LP | BVAR_ (MATLAB), via R ports | 1e-7 or better once conventions are matched |
+
+The three MATLAB toolboxes ([BEAR](https://github.com/european-central-bank/BEAR-toolbox),
+[VAR-Toolbox](https://github.com/ambropo/VAR-Toolbox),
+[BVAR_](https://github.com/naffe15/BVAR_)) were compared by porting their `.m`
+algorithms to R, not by running MATLAB. The dated diary in
+`validation/DIARY.md` lists every test, the convention differences (degrees of
+freedom, lag-decay exponent, bootstrap rescaling, proxy centring) and what is
+not covered.
 
 ## Limitations
 
