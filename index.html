@@ -4,172 +4,951 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Fast Vector Autoregressions and Local Projections with an Rcpp Engine • varm</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
-<script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="Fast Vector Autoregressions and Local Projections with an Rcpp Engine">
+<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Fast Vector Autoregressions and Local Projections with an Rcpp Engine">
+<meta name="description" content="Frequentist and Bayesian vector autoregressions (VAR), structural identification, and local projections (LP) with a C++ (Rcpp/RcppArmadillo) engine. MCMC samplers (Minnesota conjugate and hierarchical priors, stochastic-volatility triangular Gibbs, shrinkage priors, TVP-VAR) run entirely in compiled code.">
 <meta property="og:description" content="Frequentist and Bayesian vector autoregressions (VAR), structural identification, and local projections (LP) with a C++ (Rcpp/RcppArmadillo) engine. MCMC samplers (Minnesota conjugate and hierarchical priors, stochastic-volatility triangular Gibbs, shrinkage priors, TVP-VAR) run entirely in compiled code.">
-<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
-<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+<script>window.MathJax = {tex: {inlineMath: [['\x24', '\x24'], ['\\(', '\\)']]}};</script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
-<body data-spy="scroll" data-target="#toc">
+<body>
+    <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <div class="container template-home">
-      <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
-  <div class="container">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <span class="navbar-brand">
-        <a class="navbar-link" href="index.html">varm</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
-      </span>
-    </div>
+    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
 
-    <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
-<li>
-  <a href="index.html">
-    <span class="fa fa-home fa-lg"></span>
+    <a class="navbar-brand me-2" href="index.html">varm</a>
 
-  </a>
-</li>
-<li>
-  <a href="reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    Articles
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-<li>
-      <a href="articles/getting-started.html">Getting started</a>
-    </li>
-    <li>
-      <a href="articles/identification.html">Identification</a>
-    </li>
-    <li>
-      <a href="articles/bayesian-var.html">Bayesian VAR</a>
-    </li>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar" class="collapse navbar-collapse ms-3">
+      <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/getting-started.html">Getting started</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/var-theory.html">Reduced-form VAR: theory and inference</a></li>
+    <li><a class="dropdown-item" href="articles/identification.html">Structural identification</a></li>
+    <li><a class="dropdown-item" href="articles/bayesian-var.html">Bayesian VARs</a></li>
+    <li><a class="dropdown-item" href="articles/tvp-var.html">Time-varying parameter VAR</a></li>
+    <li><a class="dropdown-item" href="articles/local-projections.html">Local projections</a></li>
+    <li><a class="dropdown-item" href="articles/lp-advanced.html">Advanced local projections</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/choosing-a-method.html">Choosing a method</a></li>
+    <li><a class="dropdown-item" href="articles/validation.html">Validation report</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
-<ul class="nav navbar-nav navbar-right">
-<li>
-  <a href="news/index.html">News</a>
-</li>
-<li>
-  <a href="https://github.com/kvasilopoulos/varm" class="external-link">
-    <span class="fa fa-github fa-lg"></span>
-
-  </a>
-</li>
+<ul class="navbar-nav">
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
+</form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/kvasilopoulos/varm/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
-<!--/.nav-collapse -->
+
+
   </div>
-<!--/.container -->
-</div>
-<!--/.navbar -->
-
-
-
-      </header><div class="row">
-  <div class="contents col-md-9">
-<div class="section level1">
+</nav><div class="container template-home">
+<div class="row">
+  <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="varm">varm<a class="anchor" aria-label="anchor" href="#varm"></a>
 </h1></div>
 <!-- badges: start -->
 
-<div class="section level2">
-<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h2>
-<p>The goal of {varm} is the estimation and identification of Vector Autoregressive (VAR) models. Still is a work in progess, any suggestion for what might be of interest is much appreciated.</p>
-<p>irf -&gt; array[impulse, response, horizon, n]</p>
-</div>
-<div class="section level2">
-<h2 id="ideas-on-subroutines">Ideas on subroutines<a class="anchor" aria-label="anchor" href="#ideas-on-subroutines"></a>
-</h2>
-<p>Defers the computation until specific point</p>
-<p>Naming: - <code>gen</code> - <code>_</code> - <code>impl</code></p>
-</div>
-<div class="section level2">
-<h2 id="status">Status<a class="anchor" aria-label="anchor" href="#status"></a>
-</h2>
-<ul class="task-list">
-<li>
-<label><input type="checkbox">VAR</label>
-<ul class="task-list">
-<li>
-<label><input type="checkbox" checked>VAR impulse response function (IRFs)</label>
-<ul class="task-list">
-<li>
-<label><input type="checkbox">Identification</label>
-<ul class="task-list">
-<li><label><input type="checkbox">Reduce form</label></li>
-<li><label><input type="checkbox" checked>Cholesky</label></li>
-<li><label><input type="checkbox">Long-run restrictions</label></li>
-<li>
-<label><input type="checkbox">Sign restrictions</label>
-<ul class="task-list">
-<li><label><input type="checkbox">Uhlig</label></li>
-<li><label><input type="checkbox">Rubio Ramirez</label></li>
-<li><label><input type="checkbox">Fry Pagan</label></li>
-</ul>
-</li>
-<li>
-<label><input type="checkbox">Proxy</label>
-<ul class="task-list">
-<li><label><input type="checkbox">Mertens and Ravn/Stock and Watson</label></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<label><input type="checkbox">Confidence bands</label>
-<ul class="task-list">
-<li><label><input type="checkbox">Asymptotic</label></li>
-<li><label><input type="checkbox">Monte Carlo</label></li>
-<li><label><input type="checkbox" checked>Bootstrap</label></li>
-<li><label><input type="checkbox">Wild bootstrap</label></li>
-<li><label><input type="checkbox">Block bootstrap</label></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><label><input type="checkbox">BVAR</label></li>
-</ul>
-</div>
+<p><code>varm</code> is a fast R package for frequentist and Bayesian vector autoregressions (VAR, BVAR, TVP-VAR with stochastic volatility), structural identification and local projections (LP). The estimators, bootstraps, MCMC samplers and identification loops run in compiled Rcpp/RcppArmadillo code. A 3-variable hierarchical BVAR draws 1000 posterior samples in about 0.1 s, a full 3-variable local projection takes about 0.4 ms, and results are checked against <code>vars</code>, <code>BVAR</code>, <code>lpirfs</code>, <code>lm</code> + <code>sandwich</code> and exact posteriors to between <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>13</mn></mrow></msup><annotation encoding="application/x-tex">10^{-13}</annotation></semantics></math> and Monte Carlo accuracy (see <a href="#validation">Validation</a> and the <a href="https://kvasilopoulos.github.io/varm/articles/validation.html">validation report</a>).</p>
+<p>The design idea is <strong>one currency for uncertainty</strong>: the bootstrap, the asymptotic Monte Carlo and each Bayesian sampler return a <code>varm_draws</code> object of reduced-form draws <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>B</mi><mo>,</mo><mi mathvariant="normal">Σ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(B, \Sigma)</annotation></semantics></math>. <code><a href="reference/dynamics.html">irf()</a></code>, <code><a href="reference/dynamics.html">fevd()</a></code>, <code><a href="reference/dynamics.html">hd()</a></code> and <code><a href="reference/dynamics.html">forecast()</a></code>, and every identification scheme (<code><a href="reference/identification.html">id_chol()</a></code>, <code><a href="reference/identification.html">id_longrun()</a></code>, <code><a href="reference/identification.html">id_sign()</a></code>, <code><a href="reference/identification.html">id_given()</a></code>, …) work on that object, so a new estimator inherits all identification schemes and a new identification scheme works with every estimator.</p>
+<p>The package is experimental (version 0.1.0); see <a href="#limitations">Limitations</a>.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"kvasilopoulos/varm"</span><span class="op">)</span></span></code></pre></div>
-<hr>
-<p>Please note that the ‘varm’ project is released with a <a href="CODE_OF_CONDUCT.html">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms.</p>
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"kvasilopoulos/varm"</span><span class="op">)</span></span></code></pre></div>
+<p>A C++ toolchain is required (the package compiles RcppArmadillo code). The reference implementations used in the tests (<code>vars</code>, <code>BVAR</code>, <code>lpirfs</code>, <code>bsvars</code>, <code>sandwich</code>, <code>mvtnorm</code>) are in <code>Suggests</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="tidy-by-design">Tidy by design<a class="anchor" aria-label="anchor" href="#tidy-by-design"></a>
+</h2>
+<ul>
+<li>
+<strong>Tibbles with broom column names.</strong> <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> and <code><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment()</a></code> (re-exported from <code>generics</code>) return tibbles with <code>term</code>, <code>estimate</code>, <code>std.error</code>, <code>conf.low</code>, <code>conf.high</code>, <code>horizon</code>, <code>level</code>. <code>as_tibble()</code> is an alias of <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> for IRF, FEVD, forecast, historical decomposition, LP and Bayesian objects.</li>
+<li>
+<strong>tidyselect arguments.</strong> Every argument that names variables takes bare names, strings, positions or helpers: <code>lp(yraw, shock = rate, contemp = c(infl, unemp))</code>, <code>id_chol(order = c(infl, unemp, rate))</code>, <code>autoplot(ir, shocks = rate)</code>, <code>varm(df, p = 2, vars = c(infl, rate))</code>.</li>
+<li>
+<strong>ggplot2 for every result.</strong> <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> returns a <code>ggplot</code> for VAR/BVAR IRF, FEVD, forecast and historical decomposition objects, draws, MCMC diagnostics, TVP-VAR paths and every local-projection result; <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> prints the same object. The figure is yours to modify with <code>+</code>.</li>
+<li>
+<strong>One theme and palette.</strong> <code><a href="reference/theme_varm.html">theme_varm()</a></code> and the colour-blind-safe <code><a href="reference/theme_varm.html">varm_palette()</a></code> are used by all plots and available for your own.</li>
+<li>
+<strong>Pipe-friendly.</strong> The data or model is always the first argument and there is no hidden state: <code>yraw |&gt; varm(p = 2) |&gt; irf(horizon = 16) |&gt; autoplot()</code>.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="thirty-seconds-with-each-family">Thirty seconds with each family<a class="anchor" aria-label="anchor" href="#thirty-seconds-with-each-family"></a>
+</h2>
+<p>All examples use <code>yraw</code>, three quarterly US series (inflation <code>infl</code>, unemployment <code>unemp</code>, interest rate <code>rate</code>; Koop and Korobilis, 1953Q1-2006Q3). Each ends in an <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> figure and shows one <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> and one <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> call.</p>
+<div class="section level3">
+<h3 id="var-impulse-responses-with-bootstrap-bands">VAR: impulse responses with bootstrap bands<a class="anchor" aria-label="anchor" href="#var-impulse-responses-with-bootstrap-bands"></a>
+</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://kvasilopoulos.github.io/varm">varm</a></span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/varm.html">varm</a></span><span class="op">(</span><span class="va">yraw</span>, p <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">fit</span></span>
+<span><span class="co">#&gt; &lt;varm&gt; VAR(2) with 3 variables, 213 effective observations</span></span>
+<span><span class="co">#&gt; logLik = -338.416; max |eigenvalue| = 0.946</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;             infl   unemp    rate</span></span>
+<span><span class="co">#&gt; infl.l1   1.5378 -0.0095  0.5457</span></span>
+<span><span class="co">#&gt; unemp.l1 -0.2809  1.3297 -0.6475</span></span>
+<span><span class="co">#&gt; rate.l1  -0.0571 -0.0210  0.7766</span></span>
+<span><span class="co">#&gt; infl.l2  -0.5418  0.0341 -0.4395</span></span>
+<span><span class="co">#&gt; unemp.l2  0.2336 -0.4290  0.6730</span></span>
+<span><span class="co">#&gt; rate.l2   0.0580  0.0457  0.1232</span></span>
+<span><span class="co">#&gt; const     0.2872  0.3654  0.0052</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 21 × 8</span></span>
+<span><span class="co">#&gt;    response term     estimate std.error statistic  p.value  conf.low conf.high</span></span>
+<span><span class="co">#&gt;    &lt;chr&gt;    &lt;chr&gt;       &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1 infl     infl.l1   1.54       0.0596    25.8   2.13e-66  1.42       1.66   </span></span>
+<span><span class="co">#&gt;  2 infl     unemp.l1 -0.281      0.0622    -4.52  1.05e- 5 -0.403     -0.158  </span></span>
+<span><span class="co">#&gt;  3 infl     rate.l1  -0.0571     0.0295    -1.93  5.45e- 2 -0.115      0.00112</span></span>
+<span><span class="co">#&gt;  4 infl     infl.l2  -0.542      0.0613    -8.84  4.41e-16 -0.663     -0.421  </span></span>
+<span><span class="co">#&gt;  5 infl     unemp.l2  0.234      0.0592     3.95  1.09e- 4  0.117      0.350  </span></span>
+<span><span class="co">#&gt;  6 infl     rate.l2   0.0580     0.0291     2.00  4.72e- 2  0.000715   0.115  </span></span>
+<span><span class="co">#&gt;  7 infl     const     0.287      0.0955     3.01  2.96e- 3  0.0989     0.475  </span></span>
+<span><span class="co">#&gt;  8 unemp    infl.l1  -0.00952    0.0643    -0.148 8.82e- 1 -0.136      0.117  </span></span>
+<span><span class="co">#&gt;  9 unemp    unemp.l1  1.33       0.0670    19.8   1.09e-49  1.20       1.46   </span></span>
+<span><span class="co">#&gt; 10 unemp    rate.l1  -0.0210     0.0318    -0.660 5.10e- 1 -0.0838     0.0418 </span></span>
+<span><span class="co">#&gt; # ℹ 11 more rows</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 8</span></span>
+<span><span class="co">#&gt;       K     p  nobs logLik   AIC   BIC    HQ max_root</span></span>
+<span><span class="co">#&gt;   &lt;int&gt; &lt;int&gt; &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     3     2   213  -338.  731.  822.  768.    0.946</span></span></code></pre></div>
+<p>Responses to a policy-rate shock (recursive identification, <code>rate</code> ordered last), with 68% and 90% wild-bootstrap bands. <code>autoplot(ir)</code> without <code>shocks</code> gives the full shock-by-response grid:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">ir</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dynamics.html">irf</a></span><span class="op">(</span><span class="va">fit</span>, id <span class="op">=</span> <span class="fu"><a href="reference/identification.html">id_chol</a></span><span class="op">(</span><span class="op">)</span>, horizon <span class="op">=</span> <span class="fl">16</span>, ci <span class="op">=</span> <span class="st">"wild"</span>, nboot <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">ir</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 306 × 7</span></span>
+<span><span class="co">#&gt;    response shock horizon estimate level conf.low  conf.high</span></span>
+<span><span class="co">#&gt;    &lt;fct&gt;    &lt;fct&gt;   &lt;int&gt;    &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1 infl     infl        0   0.308    0.9   0.297   0.311    </span></span>
+<span><span class="co">#&gt;  2 unemp    infl        0  -0.0117   0.9  -0.0204  0.0000663</span></span>
+<span><span class="co">#&gt;  3 rate     infl        0   0.0877   0.9   0.0505  0.104    </span></span>
+<span><span class="co">#&gt;  4 infl     unemp       0   0        0.9   0       0        </span></span>
+<span><span class="co">#&gt;  5 unemp    unemp       0   0.332    0.9   0.321   0.334    </span></span>
+<span><span class="co">#&gt;  6 rate     unemp       0  -0.268    0.9  -0.285  -0.235    </span></span>
+<span><span class="co">#&gt;  7 infl     rate        0   0        0.9   0       0        </span></span>
+<span><span class="co">#&gt;  8 unemp    rate        0   0        0.9   0       0        </span></span>
+<span><span class="co">#&gt;  9 rate     rate        0   0.715    0.9   0.681   0.719    </span></span>
+<span><span class="co">#&gt; 10 infl     infl        1   0.472    0.9   0.410   0.497    </span></span>
+<span><span class="co">#&gt; # ℹ 296 more rows</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">ir</span>, shocks <span class="op">=</span> <span class="va">rate</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-var-irf-1.png" alt="" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="bvar-with-stochastic-volatility">BVAR with stochastic volatility<a class="anchor" aria-label="anchor" href="#bvar-with-stochastic-volatility"></a>
+</h3>
+<p>A triangular (equation-by-equation) Gibbs sampler with a Minnesota prior and stochastic volatility:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">bfit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bvarm.html">bvarm</a></span><span class="op">(</span><span class="va">yraw</span>, p <span class="op">=</span> <span class="fl">2</span>, prior <span class="op">=</span> <span class="fu"><a href="reference/prior_triangular.html">prior_triangular</a></span><span class="op">(</span><span class="st">"minnesota"</span><span class="op">)</span>, sv <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>              ndraw <span class="op">=</span> <span class="fl">2000</span>, nburn <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">bfit</span></span>
+<span><span class="co">#&gt; &lt;bvarm&gt; triangular-minnesota-sv BVAR(2), K = 3, 2000 posterior draws</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; posterior mean of B:</span></span>
+<span><span class="co">#&gt;             infl   unemp    rate</span></span>
+<span><span class="co">#&gt; infl.l1   1.2908 -0.0149  0.1870</span></span>
+<span><span class="co">#&gt; unemp.l1 -0.1210  1.2135 -0.3127</span></span>
+<span><span class="co">#&gt; rate.l1  -0.0022 -0.0097  1.0203</span></span>
+<span><span class="co">#&gt; infl.l2  -0.2992  0.0483 -0.1303</span></span>
+<span><span class="co">#&gt; unemp.l2  0.0739 -0.2804  0.2884</span></span>
+<span><span class="co">#&gt; rate.l2  -0.0033  0.0231 -0.0959</span></span>
+<span><span class="co">#&gt; const     0.3075  0.1943  0.3286</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">bfit</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 21 × 6</span></span>
+<span><span class="co">#&gt;    response term     estimate std.error conf.low conf.high</span></span>
+<span><span class="co">#&gt;    &lt;chr&gt;    &lt;chr&gt;       &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1 infl     infl.l1   1.29       0.0548   1.20      1.38  </span></span>
+<span><span class="co">#&gt;  2 infl     unemp.l1 -0.121      0.0346  -0.177    -0.0632</span></span>
+<span><span class="co">#&gt;  3 infl     rate.l1  -0.00223    0.0168  -0.0299    0.0263</span></span>
+<span><span class="co">#&gt;  4 infl     infl.l2  -0.299      0.0563  -0.391    -0.207 </span></span>
+<span><span class="co">#&gt;  5 infl     unemp.l2  0.0739     0.0329   0.0195    0.127 </span></span>
+<span><span class="co">#&gt;  6 infl     rate.l2  -0.00335    0.0151  -0.0297    0.0203</span></span>
+<span><span class="co">#&gt;  7 infl     const     0.307      0.0843   0.165     0.445 </span></span>
+<span><span class="co">#&gt;  8 unemp    infl.l1  -0.0149     0.0417  -0.0843    0.0530</span></span>
+<span><span class="co">#&gt;  9 unemp    unemp.l1  1.21       0.0544   1.12      1.30  </span></span>
+<span><span class="co">#&gt; 10 unemp    rate.l1  -0.00968    0.0173  -0.0370    0.0193</span></span>
+<span><span class="co">#&gt; # ℹ 11 more rows</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">bfit</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 7</span></span>
+<span><span class="co">#&gt;       K     p  nobs ndraw method                  logml accept</span></span>
+<span><span class="co">#&gt;   &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;chr&gt;                   &lt;dbl&gt;  &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     3     2   213  2000 triangular-minnesota-sv    NA     NA</span></span></code></pre></div>
+<p><code>autoplot(bfit, type = "coef")</code> plots the coefficient posteriors, and <code><a href="reference/volatility.html">volatility()</a></code> returns the posterior-mean shock volatilities, which are one <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>-style reshape away from a ggplot:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="va">vol</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/volatility.html">volatility</a></span><span class="op">(</span><span class="va">bfit</span><span class="op">)</span></span>
+<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  quarter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1953.25</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="fl">0.25</span>, by <span class="op">=</span> <span class="fl">0.25</span>, length.out <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">vol</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">vol</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  variable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vol</span><span class="op">)</span>, each <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">vol</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  volatility <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">vol</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">quarter</span>, <span class="va">volatility</span>, colour <span class="op">=</span> <span class="va">variable</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_colour_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="reference/theme_varm.html">varm_palette</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="st">"Posterior mean shock volatility"</span>, colour <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="reference/theme_varm.html">theme_varm</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-bvar-sv-plot-1.png" alt="" width="100%"></p>
+<p>The default prior of <code><a href="reference/bvarm.html">bvarm()</a></code> is instead the conjugate hierarchical Minnesota prior of Giannone, Lenza and Primiceri (2015), with exact draws for the coefficients and a Metropolis step for the hyperparameters. Both return a <code>bvarm</code> object, and <code>irf(bfit, id = id_chol())</code> works the same way as for <code>fit</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="local-projections">Local projections<a class="anchor" aria-label="anchor" href="#local-projections"></a>
+</h3>
+<p><code>shock</code> and <code>contemp</code> are tidyselect arguments (bare names, strings or <code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code>); <code>contemp</code> lists the variables ordered before the shock, which reproduces the recursive identification used above.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lpf</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/lp.html">lp</a></span><span class="op">(</span><span class="va">yraw</span>, shock <span class="op">=</span> <span class="va">rate</span>, contemp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">infl</span>, <span class="va">unemp</span><span class="op">)</span>, horizon <span class="op">=</span> <span class="fl">16</span>, lags <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>          lag_augment <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">lpf</span></span>
+<span><span class="co">#&gt; &lt;lpm&gt; local projection of infl, unemp, rate on 'rate', horizons 0..16 (3 lags, HC)</span></span>
+<span><span class="co">#&gt;       infl   unemp    rate</span></span>
+<span><span class="co">#&gt; 0   0.0000  0.0000  1.0000</span></span>
+<span><span class="co">#&gt; 1  -0.0590 -0.0243  0.7763</span></span>
+<span><span class="co">#&gt; 4  -0.0117  0.0456  0.6506</span></span>
+<span><span class="co">#&gt; 8  -0.1030  0.2381  0.2098</span></span>
+<span><span class="co">#&gt; 12 -0.5391  0.1760 -0.1398</span></span>
+<span><span class="co">#&gt; 16 -0.6921  0.0634 -0.4354</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">lpf</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 102 × 7</span></span>
+<span><span class="co">#&gt;    horizon response  estimate std.error level  conf.low conf.high</span></span>
+<span><span class="co">#&gt;      &lt;int&gt; &lt;fct&gt;        &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt;  1       0 infl      4.85e-15  1.27e-13   0.9 -2.04e-13  2.13e-13</span></span>
+<span><span class="co">#&gt;  2       1 infl     -5.90e- 2  5.03e- 2   0.9 -1.42e- 1  2.37e- 2</span></span>
+<span><span class="co">#&gt;  3       2 infl     -6.31e- 2  9.43e- 2   0.9 -2.18e- 1  9.20e- 2</span></span>
+<span><span class="co">#&gt;  4       3 infl     -2.71e- 2  1.20e- 1   0.9 -2.24e- 1  1.70e- 1</span></span>
+<span><span class="co">#&gt;  5       4 infl     -1.17e- 2  1.54e- 1   0.9 -2.64e- 1  2.41e- 1</span></span>
+<span><span class="co">#&gt;  6       5 infl      2.43e- 3  1.70e- 1   0.9 -2.76e- 1  2.81e- 1</span></span>
+<span><span class="co">#&gt;  7       6 infl     -9.90e- 3  1.69e- 1   0.9 -2.88e- 1  2.68e- 1</span></span>
+<span><span class="co">#&gt;  8       7 infl     -5.56e- 2  1.71e- 1   0.9 -3.37e- 1  2.26e- 1</span></span>
+<span><span class="co">#&gt;  9       8 infl     -1.03e- 1  1.72e- 1   0.9 -3.87e- 1  1.81e- 1</span></span>
+<span><span class="co">#&gt; 10       9 infl     -2.15e- 1  1.69e- 1   0.9 -4.92e- 1  6.27e- 2</span></span>
+<span><span class="co">#&gt; # ℹ 92 more rows</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">lpf</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span><span class="co">#&gt;   shock horizon  lags se_type iv     nobs</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;   &lt;int&gt; &lt;int&gt; &lt;chr&gt;   &lt;lgl&gt; &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 rate       16     3 hc      FALSE   212</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">lpf</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-lp-1.png" alt="" width="100%"></p>
+<p>For the same shock the LP and VAR responses are close but not identical; <code><a href="reference/compare_lp_var.html">compare_lp_var()</a></code> quantifies it.</p>
 </div>
 </div>
-  </div>
-
-  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-    <div class="links">
+<div class="section level2">
+<h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
+</h2>
+<p>Status column: <strong>validated</strong> = agrees with a named reference implementation or an exact result in the tests or <code>validation/</code>; <strong>tested</strong> = unit tests of correctness (against a hand computation, a simulation with known truth, or an invariant) but no external reference; <strong>new</strong> = recently added, documented, consistency-tested only. Details in the <a href="https://kvasilopoulos.github.io/varm/articles/validation.html">validation report</a>.</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr>
+<th>Method</th>
+<th>Function</th>
+<th>Reference</th>
+<th>Status</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>Reduced-form VAR</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>OLS / Gaussian ML, constant, trend, exogenous terms</td>
+<td><code><a href="reference/varm.html">varm()</a></code></td>
+<td>Lutkepohl (2005)</td>
+<td>validated vs <code>vars</code> (~1e-12)</td>
+</tr>
+<tr>
+<td>Lag selection (AIC, HQ, SC, FPE)</td>
+<td><code><a href="reference/var_select.html">var_select()</a></code></td>
+<td>Lutkepohl (2005)</td>
+<td>validated vs <code><a href="https://rdrr.io/pkg/vars/man/VARselect.html" class="external-link">vars::VARselect</a></code>
+</td>
+</tr>
+<tr>
+<td>Companion-matrix stability</td>
+<td><code><a href="reference/stability.html">stability()</a></code></td>
+<td>Hamilton (1994)</td>
+<td>validated vs <code><a href="https://rdrr.io/pkg/vars/man/roots.html" class="external-link">vars::roots</a></code>
+</td>
+</tr>
+<tr>
+<td>IRF, FEVD, forecasts</td>
+<td>
+<code><a href="reference/dynamics.html">irf()</a></code>, <code><a href="reference/dynamics.html">fevd()</a></code>, <code><a href="reference/dynamics.html">forecast()</a></code>
+</td>
+<td>Lutkepohl (2005)</td>
+<td>validated vs <code>vars</code>
+</td>
+</tr>
+<tr>
+<td>Normalise a shock to a given size on a variable</td>
+<td>
+<code><a href="reference/normalise_to.html">normalise_to()</a></code>, <code>irf(normalise = )</code>
+</td>
+<td>-</td>
+<td>tested</td>
+</tr>
+<tr>
+<td>Tidy output (tibbles), ggplot2 figures</td>
+<td>
+<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code>, <code><a href="https://generics.r-lib.org/reference/augment.html" class="external-link">augment()</a></code>, <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code>, <code><a href="reference/theme_varm.html">theme_varm()</a></code>, <code><a href="reference/theme_varm.html">varm_palette()</a></code>
+</td>
+<td>broom conventions</td>
+<td>tested</td>
+</tr>
+<tr>
+<td>Historical decomposition</td>
+<td><code><a href="reference/dynamics.html">hd()</a></code></td>
+<td>Burbidge and Harrison (1985)</td>
+<td>tested</td>
+</tr>
+<tr>
+<td><strong>Inference for VAR</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Residual bootstrap, wild bootstrap (Rademacher, Mammen)</td>
+<td>
+<code><a href="reference/draws.html">draws()</a></code>, <code>irf(ci = )</code>
+</td>
+<td>Runkle (1987); Goncalves and Kilian (2004)</td>
+<td>tested; coverage simulated (see Limitations)</td>
+</tr>
+<tr>
+<td>Bootstrap-after-bootstrap bias correction</td>
+<td><code>draws(bias_correct = TRUE)</code></td>
+<td>Kilian (1998)</td>
+<td>tested; coverage simulated</td>
+</tr>
+<tr>
+<td>Asymptotic Monte Carlo</td>
+<td><code>draws(method = "mc")</code></td>
+<td>Lutkepohl (2005)</td>
+<td>tested (OLS covariance); coverage simulated</td>
+</tr>
+<tr>
+<td><strong>Structural identification</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Recursive (Cholesky)</td>
+<td><code><a href="reference/identification.html">id_chol()</a></code></td>
+<td>Sims (1980)</td>
+<td>validated vs <code>vars</code>
+</td>
+</tr>
+<tr>
+<td>Long-run (Blanchard-Quah)</td>
+<td><code><a href="reference/identification.html">id_longrun()</a></code></td>
+<td>Blanchard and Quah (1989)</td>
+<td>validated vs <code><a href="https://rdrr.io/pkg/vars/man/BQ.html" class="external-link">vars::BQ</a></code> (~1e-13)</td>
+</tr>
+<tr>
+<td>Sign restrictions, Haar rotations</td>
+<td><code><a href="reference/identification.html">id_sign()</a></code></td>
+<td>Uhlig (2005); Rubio-Ramirez, Waggoner and Zha (2010)</td>
+<td>tested (exact Haar and acceptance laws)</td>
+</tr>
+<tr>
+<td>Median-target (Fry-Pagan) rotation</td>
+<td><code><a href="reference/irf_fry_pagan.html">irf_fry_pagan()</a></code></td>
+<td>Fry and Pagan (2011)</td>
+<td>tested</td>
+</tr>
+<tr>
+<td>User impact matrix</td>
+<td><code><a href="reference/identification.html">id_given()</a></code></td>
+<td>-</td>
+<td>tested</td>
+</tr>
+<tr>
+<td>Zero and sign restrictions (unweighted)</td>
+<td><code><a href="reference/id_zerosign.html">id_zerosign()</a></code></td>
+<td>Arias, Rubio-Ramirez and Waggoner (2018)</td>
+<td>tested (zeros exact); importance weights not implemented</td>
+</tr>
+<tr>
+<td>Short- and long-run zero (A-B) restrictions</td>
+<td><code><a href="reference/id_restrictions.html">id_restrictions()</a></code></td>
+<td>Blanchard and Quah (1989); Sims (1980)</td>
+<td>tested (reproduces BQ and recursive schemes)</td>
+</tr>
+<tr>
+<td>Identification through heteroskedasticity (two regimes)</td>
+<td><code><a href="reference/id_hetero.html">id_hetero()</a></code></td>
+<td>Rigobon (2003)</td>
+<td>tested (simulation)</td>
+</tr>
+<tr>
+<td><strong>Proxy-SVAR (external instruments)</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Proxy identification, first-stage F</td>
+<td>
+<code><a href="reference/id_proxy.html">id_proxy()</a></code>, <code><a href="reference/proxy_fstat.html">proxy_fstat()</a></code>
+</td>
+<td>Mertens and Ravn (2013); Stock and Watson (2012)</td>
+<td>tested vs hand computation</td>
+</tr>
+<tr>
+<td>Proxy bootstrap (wild, moving block)</td>
+<td>
+<code><a href="reference/varm_proxy.html">varm_proxy()</a></code>, <code><a href="reference/proxy_draws.html">proxy_draws()</a></code>
+</td>
+<td>Jentsch and Lunsford (2019)</td>
+<td>tested; wild bootstrap fails at impact (see Limitations)</td>
+</tr>
+<tr>
+<td>Weak-instrument robust sets</td>
+<td><code><a href="reference/varm_proxy_robust.html">varm_proxy_robust()</a></code></td>
+<td>Montiel Olea, Stock and Watson (2021)</td>
+<td>tested (endpoints solve the Wald test)</td>
+</tr>
+<tr>
+<td>Bayesian proxy-SVAR (limited information)</td>
+<td><code><a href="reference/varm_proxy_bayes.html">varm_proxy_bayes()</a></code></td>
+<td>after Caldara and Herbst (2019)</td>
+<td>tested vs bootstrap; not their sampler</td>
+</tr>
+<tr>
+<td>Bayesian proxy-SVAR with sign and reliability restrictions</td>
+<td>
+<code><a href="reference/varm_proxy_arw.html">varm_proxy_arw()</a></code>, <code>id_proxy_bayes</code>
+</td>
+<td>Arias, Rubio-Ramirez and Waggoner (2021)</td>
+<td>new; coverage simulated</td>
+</tr>
+<tr>
+<td>Prior-robust Bayesian proxy-SVAR</td>
+<td><code><a href="reference/varm_proxy_gkr.html">varm_proxy_gkr()</a></code></td>
+<td>Giacomini, Kitagawa and Read (2022)</td>
+<td>new; coverage simulated</td>
+</tr>
+<tr>
+<td><strong>Bayesian VAR</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Conjugate NIW, Minnesota, sum-of-coefficients, single-unit-root priors</td>
+<td>
+<code><a href="reference/bvarm.html">bvarm()</a></code>, <code><a href="reference/prior_minnesota.html">prior_minnesota()</a></code>
+</td>
+<td>Litterman (1986); Doan, Litterman and Sims (1984); Sims (1993)</td>
+<td>validated (analytic NIW moments; log posterior vs <code>BVAR</code> ~1e-13)</td>
+</tr>
+<tr>
+<td>Hierarchical hyperparameters (optimiser + adaptive Metropolis)</td>
+<td><code><a href="reference/bvarm.html">bvarm()</a></code></td>
+<td>Giannone, Lenza and Primiceri (2015)</td>
+<td>validated vs <code>BVAR</code> and exact quadrature</td>
+</tr>
+<tr>
+<td>Triangular equation-by-equation sampler</td>
+<td><code>bvarm(prior = prior_triangular())</code></td>
+<td>Carriero, Clark and Marcellino (2019)</td>
+<td>validated vs exact posterior (homoskedastic)</td>
+</tr>
+<tr>
+<td>SSVS and horseshoe shrinkage priors</td>
+<td><code>prior_triangular("ssvs" / "horseshoe")</code></td>
+<td>George, Sun and Ni (2008); Carvalho, Polson and Scott (2010)</td>
+<td>tested (simulated sparse VAR)</td>
+</tr>
+<tr>
+<td>Stochastic volatility (KSC mixture, FFBS)</td>
+<td>
+<code>bvarm(sv = TRUE)</code>, <code><a href="reference/volatility.html">volatility()</a></code>
+</td>
+<td>Kim, Shephard and Chib (1998); Carter and Kohn (1994)</td>
+<td>validated (Geweke test); calibration slightly low</td>
+</tr>
+<tr>
+<td>TVP-VAR with stochastic volatility; tidy paths, <code>autoplot(type = "coef"/"vol"/"irf")</code>
+</td>
+<td>
+<code><a href="reference/tvpvar.html">tvpvar()</a></code>, <code><a href="reference/tvp_prior.html">tvp_prior()</a></code>, <code><a href="reference/irf_path.html">irf_path()</a></code>, <code><a href="reference/tvp_volatility.html">tvp_volatility()</a></code>
+</td>
+<td>Primiceri (2005); Cogley and Sargent (2005)</td>
+<td>validated (constant limit vs OLS and GLS); prior-sensitive</td>
+</tr>
+<tr>
+<td>MCMC diagnostics (ESS, R-hat, Geweke; <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code>)</td>
+<td><code><a href="reference/mcmc_diagnostics.html">mcmc_diagnostics()</a></code></td>
+<td>Vehtari et al. (2021); Geweke (1992)</td>
+<td>validated (known AR(1) ESS)</td>
+</tr>
+<tr>
+<td><strong>Local projections</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>LP, HAC (Newey-West) and HC standard errors, cumulative responses; tidyselect <code>shock</code>, <code>contemp</code>, <code>responses</code>
+</td>
+<td><code><a href="reference/lp.html">lp()</a></code></td>
+<td>Jorda (2005)</td>
+<td>validated vs <code>lm</code> + <code>sandwich</code> (~1e-13)</td>
+</tr>
+<tr>
+<td>LP-IV</td>
+<td><code>lp(iv = )</code></td>
+<td>Stock and Watson (2018)</td>
+<td>validated vs manual 2SLS</td>
+</tr>
+<tr>
+<td>Lag augmentation</td>
+<td><code>lp(lag_augment = TRUE)</code></td>
+<td>Montiel Olea and Plagborg-Moller (2021)</td>
+<td>tested</td>
+</tr>
+<tr>
+<td>Joint cross-horizon covariance, sup-t bands (<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> gives <code>pointwise</code> and <code>sup-t</code> rows)</td>
+<td>
+<code><a href="reference/lp_joint.html">lp_joint()</a></code>, <code><a href="reference/lp_supt.html">lp_supt()</a></code>
+</td>
+<td>Montiel Olea and Plagborg-Moller (2019)</td>
+<td>tested; sup-t under-covers in simulation</td>
+</tr>
+<tr>
+<td>State-dependent LP (<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> with <code>state</code> column, <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code>)</td>
+<td><code><a href="reference/lp_state.html">lp_state()</a></code></td>
+<td>Auerbach and Gorodnichenko (2012, 2013)</td>
+<td>validated vs <code><a href="https://rdrr.io/pkg/lpirfs/man/lp_nl.html" class="external-link">lpirfs::lp_nl</a></code> (~7e-13)</td>
+</tr>
+<tr>
+<td>Smooth LP</td>
+<td><code><a href="reference/lp_smooth.html">lp_smooth()</a></code></td>
+<td>Barnichon and Brownlees (2019)</td>
+<td>tested (reproduces LP with no penalty)</td>
+</tr>
+<tr>
+<td>Panel LP, fixed effects, clustered errors</td>
+<td><code><a href="reference/lp_panel.html">lp_panel()</a></code></td>
+<td>Jorda (2005)</td>
+<td>tested vs <code>lm</code> with dummies</td>
+</tr>
+<tr>
+<td>Direct LP forecasts (<code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>, <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code>), LP versus VAR comparison</td>
+<td>
+<code><a href="reference/lp_forecast.html">lp_forecast()</a></code>, <code><a href="reference/compare_lp_var.html">compare_lp_var()</a></code>
+</td>
+<td>Plagborg-Moller and Wolf (2021)</td>
+<td>tested</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2">
+<h2 id="benchmarks">Benchmarks<a class="anchor" aria-label="anchor" href="#benchmarks"></a>
+</h2>
+<p>Seconds of elapsed time per 1000 retained posterior draws, simulated VAR(4) with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>250</mn></mrow><annotation encoding="application/x-tex">T = 250</annotation></semantics></math>, Apple M4 Pro, R 4.6.1, OpenBLAS, single-threaded (<code>OMP_NUM_THREADS=1</code>), nothing else running, installed package. Reproduce with <code>Rscript validation/bayes.R s8</code>.</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr>
+<th>sampler</th>
+<th>K = 3</th>
+<th>K = 7</th>
+<th>K = 20</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+<code><a href="reference/bvarm.html">bvarm()</a></code> conjugate, fixed hyperparameters</td>
+<td>0.003</td>
+<td>0.010</td>
+<td>0.061</td>
+</tr>
+<tr>
+<td>
+<code><a href="reference/bvarm.html">bvarm()</a></code> conjugate, hierarchical (optimiser + 500 burn-in)</td>
+<td>0.054</td>
+<td>0.177</td>
+<td>1.271</td>
+</tr>
+<tr>
+<td>
+<code><a href="reference/bvarm.html">bvarm()</a></code> triangular, Minnesota, homoskedastic</td>
+<td>0.019</td>
+<td>0.110</td>
+<td>1.312</td>
+</tr>
+<tr>
+<td>
+<code><a href="reference/bvarm.html">bvarm()</a></code> triangular, Minnesota + stochastic volatility</td>
+<td>0.112</td>
+<td>0.382</td>
+<td>2.979</td>
+</tr>
+<tr>
+<td>
+<code><a href="https://rdrr.io/pkg/BVAR/man/bvar.html" class="external-link">BVAR::bvar()</a></code> (hierarchical <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>)</td>
+<td>0.157</td>
+<td>0.259</td>
+<td>0.899</td>
+</tr>
+<tr>
+<td>
+<code>bsvars::bsvar_sv()</code> (structural SV)</td>
+<td>1.35</td>
+<td>4.64</td>
+<td>not run</td>
+</tr>
+</tbody>
+</table>
+<p>Other timings on <code>yraw</code> (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>215</mn></mrow><annotation encoding="application/x-tex">T = 215</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">K = 3</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">p = 2</annotation></semantics></math>):</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>task</th>
+<th>time</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+<code><a href="reference/tvpvar.html">tvpvar()</a></code>, SV + time-varying <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>t</mi></msub><annotation encoding="application/x-tex">A_t</annotation></semantics></math> + full <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Q</mi><annotation encoding="application/x-tex">Q</annotation></semantics></math>, 10000 draws + 2000 burn-in</td>
+<td>about 8 s</td>
+</tr>
+<tr>
+<td>
+<code><a href="reference/lp.html">lp()</a></code> for one shock, 3 responses, horizons 0-16</td>
+<td>about 0.5 ms</td>
+</tr>
+<tr>
+<td>
+<code><a href="reference/varm.html">varm()</a></code> OLS fit</td>
+<td>about 0.05 ms</td>
+</tr>
+<tr>
+<td>1000 wild-bootstrap draws of the VAR(2)</td>
+<td>0.02 s</td>
+</tr>
+<tr>
+<td>
+<code><a href="reference/dynamics.html">irf()</a></code> with 1000 wild-bootstrap draws, horizon 16</td>
+<td>0.03 s</td>
+</tr>
+<tr>
+<td>
+<code><a href="reference/bvarm.html">bvarm()</a></code> hierarchical, 10000 draws + 2000 burn-in</td>
+<td>0.39 s</td>
+</tr>
+<tr>
+<td>
+<code><a href="reference/bvarm.html">bvarm()</a></code> triangular + SV, 10000 draws + 2000 burn-in</td>
+<td>2.4 s</td>
+</tr>
+</tbody>
+</table>
+<p>Reading the table honestly: the conjugate samplers are very fast and the hierarchical one beats <code><a href="https://rdrr.io/pkg/BVAR/man/bvar.html" class="external-link">BVAR::bvar()</a></code> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">K = 3</annotation></semantics></math> (about 2x), is level at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">K = 7</annotation></semantics></math>, and is <strong>slower at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">K = 20</annotation></semantics></math></strong> (3.6 s against 1.6 s). The triangular samplers are a different model class (no <code>BVAR</code> counterpart); their cost rises from 0.05 s (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">K = 3</annotation></semantics></math>) to 5.7 s (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">K = 20</annotation></semantics></math>) in the homoskedastic case. <code><a href="reference/tvpvar.html">tvpvar()</a></code> is a long-running sampler: about 3 ms per sweep at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">p = 2</annotation></semantics></math>, and the cost increases steeply with the lag length. Timings depend on the machine, the BLAS and the settings, and were measured in single runs.</p>
+</div>
+<div class="section level2">
+<h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a>
+</h2>
+<p>Checks run live in the <a href="https://kvasilopoulos.github.io/varm/articles/validation.html">validation report</a>; the longer ones are in <code>validation/</code>. The unit-test suite (<code>tests/testthat</code>) has 846 expectations and runs in about 17 s.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Module</th>
+<th>Reference</th>
+<th>Agreement (max abs. difference unless stated)</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>VAR coefficients, covariance, log-likelihood, IC</td>
+<td><code>vars</code></td>
+<td>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>≤</mo><annotation encoding="application/x-tex">\le</annotation></semantics></math> 6e-13</td>
+</tr>
+<tr>
+<td>Cholesky IRF, FEVD, point forecast</td>
+<td><code>vars</code></td>
+<td>4e-13 (IRF), 3e-13 (FEVD), 5e-12 (forecast)</td>
+</tr>
+<tr>
+<td>Blanchard-Quah impact matrix</td>
+<td><code><a href="https://rdrr.io/pkg/vars/man/BQ.html" class="external-link">vars::BQ</a></code></td>
+<td>1e-13</td>
+</tr>
+<tr>
+<td>LP coefficient, Newey-West and HC1 s.e.</td>
+<td>
+<code>lm</code> + <code>sandwich</code>
+</td>
+<td>3e-13</td>
+</tr>
+<tr>
+<td>State-dependent LP (IRF and HAC band half-widths)</td>
+<td><code><a href="https://rdrr.io/pkg/lpirfs/man/lp_nl.html" class="external-link">lpirfs::lp_nl</a></code></td>
+<td>7.5e-13</td>
+</tr>
+<tr>
+<td>Hierarchical BVAR log posterior at matched <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>
+</td>
+<td><code><a href="https://rdrr.io/pkg/BVAR/man/bvar.html" class="external-link">BVAR::bvar</a></code></td>
+<td>7e-13 (relative 2e-15)</td>
+</tr>
+<tr>
+<td>Hierarchical hyperparameter posterior means</td>
+<td>exact quadrature, <code>BVAR</code> MCMC</td>
+<td>within 3% (Monte Carlo error)</td>
+</tr>
+<tr>
+<td>Triangular sampler, homoskedastic</td>
+<td>exact semi-conjugate posterior</td>
+<td>max abs. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math> 2.2</td>
+</tr>
+<tr>
+<td>Stochastic-volatility update</td>
+<td>Geweke joint-distribution test</td>
+<td>all absolute <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math> below 1.1</td>
+</tr>
+<tr>
+<td>Haar rotations, sign-restriction acceptance rates</td>
+<td>exact laws (KS, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">1/2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mn>4</mn></mrow><annotation encoding="application/x-tex">1/4</annotation></semantics></math>)</td>
+<td>KS statistic 0.003 or less</td>
+</tr>
+<tr>
+<td>TVP-VAR, constant limit</td>
+<td>OLS</td>
+<td>4e-3 (Monte Carlo error)</td>
+</tr>
+<tr>
+<td>OLS VAR, NW posterior, Cholesky IRF, FEVD, HD, sign and zero restrictions</td>
+<td>BEAR toolbox (MATLAB), via R ports checked against BEAR’s stored <code>.mat</code> results</td>
+<td>1e-12 or better; sampled quantities within Monte Carlo error</td>
+</tr>
+<tr>
+<td>Minnesota NW marginal likelihood and posterior, with and without dummy priors</td>
+<td>BEAR toolbox</td>
+<td>no dummies 1e-9; sum-of-coefficients 1e-9; combined dummies 0.05 log units (open)</td>
+</tr>
+<tr>
+<td>Cholesky and long-run IRF, FEVD, HD, LP, IV-LP</td>
+<td>VAR-Toolbox (MATLAB), via R ports</td>
+<td>1e-5 or better (3e-14 for long-run)</td>
+</tr>
+<tr>
+<td>Minnesota marginal likelihood, IRF, forecasts, proxy-SVAR, LP</td>
+<td>BVAR_ (MATLAB), via R ports</td>
+<td>1e-7 or better once conventions are matched</td>
+</tr>
+</tbody>
+</table>
+<p>The three MATLAB toolboxes (<a href="https://github.com/european-central-bank/BEAR-toolbox" class="external-link">BEAR</a>, <a href="https://github.com/ambropo/VAR-Toolbox" class="external-link">VAR-Toolbox</a>, <a href="https://github.com/naffe15/BVAR_" class="external-link">BVAR_</a>) were compared by porting their <code>.m</code> algorithms to R, not by running MATLAB. The dated diary in <code>validation/DIARY.md</code> lists every test, the convention differences (degrees of freedom, lag-decay exponent, bootstrap rescaling, proxy centring) and what is not covered.</p>
+</div>
+<div class="section level2">
+<h2 id="limitations">Limitations<a class="anchor" aria-label="anchor" href="#limitations"></a>
+</h2>
+<p>Found by the validation scripts, in order of how likely they are to matter:</p>
+<ul>
+<li>
+<strong>Draw-based IRF bands under-cover in short, persistent or heteroskedastic samples.</strong> For a VAR(1) with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">\rho = 0.9</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">T = 200</annotation></semantics></math>, 90% bands cover 81% (iid bootstrap), 75% (wild), 88% (Monte Carlo) and 89% (bias-corrected iid bootstrap); with heteroskedastic errors every method covers only 61-75%.</li>
+<li>
+<strong>The proxy-SVAR wild bootstrap does not cover the impact response</strong> (13-21% coverage of nominal 90% in <code>validation/proxy-coverage.R</code>). Use <code>type = "mbb"</code> (default of <code><a href="reference/proxy_draws.html">proxy_draws()</a></code>) or <code><a href="reference/varm_proxy_robust.html">varm_proxy_robust()</a></code>.</li>
+<li>
+<strong>Sup-t bands from <code><a href="reference/lp_supt.html">lp_supt()</a></code> under-cover</strong>: 78% whole-path coverage with HAC errors (84% with lag-augmented HC errors) at nominal 90%.</li>
+<li>
+<strong>Stochastic-volatility calibration is slightly low</strong>: 83% coverage of the volatility-of-volatility parameter and 88% of the volatility path at nominal 90% (simulation-based calibration, 60 replications).</li>
+<li>
+<strong>TVP-VAR results depend on the prior</strong> (<code>tvp_prior(kQ = )</code>); coverage of simulated coefficient paths ranged from 56% to 79% across two settings.</li>
+<li>
+<strong>The hierarchical sampler mixes slowly</strong>: effective sample sizes of 70-160 for the hyperparameters in 3000 draws of one chain. Use <code><a href="reference/mcmc_diagnostics.html">mcmc_diagnostics()</a></code>.</li>
+<li>
+<strong><code><a href="reference/id_zerosign.html">id_zerosign()</a></code> is unweighted</strong>: the ARRW importance weights are not implemented, so bands under partial zero restrictions are approximate.</li>
+<li>
+<strong>No missing values</strong>, no VECM or cointegration, no panel or global VAR, no mixed-frequency models, no frequentist penalised (lasso) VAR, no narrative restrictions. See the literature map for packages that cover these.</li>
+<li>
+<code><a href="reference/varm_proxy_arw.html">varm_proxy_arw()</a></code> and <code><a href="reference/varm_proxy_gkr.html">varm_proxy_gkr()</a></code> are new and have no external replication; in a 50-replication simulation the 90% ARW band covered 91% and the conventional single-prior GKR band only 65% for a set-identified shock (the robust region 91%).</li>
+<li>Speed: <code><a href="https://rdrr.io/pkg/BVAR/man/bvar.html" class="external-link">BVAR::bvar()</a></code> is faster at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">K = 20</annotation></semantics></math> for the hierarchical prior.</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="literature-map">Literature map<a class="anchor" aria-label="anchor" href="#literature-map"></a>
+</h2>
+<p>The full discussion is in <code><a href="articles/choosing-a-method.html">vignette("choosing-a-method")</a></code>. Entries are from the <a href="https://github.com/kvasilopoulos/awesome-var" class="external-link">awesome-var</a> list.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Area</th>
+<th>Packages</th>
+<th>Relation to <code>varm</code>
+</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Core VAR</td>
+<td>
+<code>vars</code>, <code>svars</code>, <code>tsDyn</code>
+</td>
+<td>overlap on estimation and recursive/long-run/sign IRFs (<code>varm</code> agrees with <code>vars</code> to rounding error); no diagnostic tests, VECM or threshold models</td>
+</tr>
+<tr>
+<td>Hierarchical BVAR</td>
+<td>
+<code>BVAR</code>, <code>bvartools</code>
+</td>
+<td>same GLP prior (log posterior agrees with <code>BVAR</code> at matched <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>); <code>varm</code> adds triangular, SV, SSVS and horseshoe samplers</td>
+</tr>
+<tr>
+<td>Bayesian SVAR</td>
+<td>
+<code>bsvars</code>, <code>bsvarSIGNs</code>, <code>bpvars</code>
+</td>
+<td>complementary: use them for narrative restrictions, weighted zero+sign inference and identification through heteroskedasticity</td>
+</tr>
+<tr>
+<td>Time variation</td>
+<td>
+<code>bvarsv</code>, <code>bvhar</code>, <code>mfbvar</code>
+</td>
+<td>
+<code>varm</code> has <code><a href="reference/tvpvar.html">tvpvar()</a></code> and <code>bvarm(sv = TRUE)</code>; no mixed frequency</td>
+</tr>
+<tr>
+<td>High-dimensional</td>
+<td>
+<code>BigVAR</code>, <code>bigtime</code>, <code>VARshrink</code>
+</td>
+<td>
+<code>varm</code> covers Bayesian shrinkage only</td>
+</tr>
+<tr>
+<td>Panel and global VAR</td>
+<td>
+<code>panelvar</code>, <code>pvars</code>, <code>BGVAR</code>
+</td>
+<td>
+<code>varm</code> has panel LP (<code><a href="reference/lp_panel.html">lp_panel()</a></code>) but no panel VAR</td>
+</tr>
+<tr>
+<td>Local projections</td>
+<td>
+<code>lpirfs</code>, <code>sovereign</code>
+</td>
+<td>
+<code>varm</code> matches <code><a href="https://rdrr.io/pkg/lpirfs/man/lp_nl.html" class="external-link">lpirfs::lp_nl</a></code>; adds smooth LP, sup-t bands, LP-IV, lag augmentation</td>
+</tr>
+<tr>
+<td>External instruments</td>
+<td>
+<code>varexternal</code>, Plagborg-Moller code</td>
+<td>
+<code>varm_proxy*()</code> family and <code>lp(iv = )</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Also in the awesome-var list and not covered by <code>varm</code>: the MATLAB toolboxes (VAR Toolbox, BEAR, IRIS, BVAR_), Python (<code>statsmodels</code>, <code>sktime</code>), Julia (<code>VectorAutoregressions.jl</code>, <code>LocalProjections.jl</code>) and EViews/Stata implementations.</p>
+</div>
+<div class="section level2">
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+</h2>
+<p>Online: <a href="https://kvasilopoulos.github.io/varm" class="uri">https://kvasilopoulos.github.io/varm</a>. Articles, in suggested reading order:</p>
+<ol style="list-style-type: decimal">
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/getting-started.html">Getting started</a> - <code><a href="articles/getting-started.html">vignette("getting-started")</a></code>
+</li>
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/var-theory.html">Reduced-form VAR: theory and inference</a> - <code><a href="articles/var-theory.html">vignette("var-theory")</a></code>
+</li>
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/identification.html">Structural identification</a> - <code><a href="articles/identification.html">vignette("identification")</a></code>
+</li>
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/bayesian-var.html">Bayesian VARs</a> - <code><a href="articles/bayesian-var.html">vignette("bayesian-var")</a></code>
+</li>
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/tvp-var.html">Time-varying parameter VAR</a> - <code><a href="articles/tvp-var.html">vignette("tvp-var")</a></code>
+</li>
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/local-projections.html">Local projections</a> - <code><a href="articles/local-projections.html">vignette("local-projections")</a></code>
+</li>
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/lp-advanced.html">Advanced local projections</a> - <code><a href="articles/lp-advanced.html">vignette("lp-advanced")</a></code>
+</li>
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/choosing-a-method.html">Choosing a method</a> - <code><a href="articles/choosing-a-method.html">vignette("choosing-a-method")</a></code>
+</li>
+<li>
+<a href="https://kvasilopoulos.github.io/varm/articles/validation.html">Validation report</a> - <code><a href="articles/validation.html">vignette("validation")</a></code>
+</li>
+</ol>
+<p>The reference index lists every function with its tidy and plot methods (<code>tidy.varm_irf</code>, <code>autoplot.varm_irf</code>, <code>theme_varm</code>, …).</p>
+<p>The method-by-method index with definitions and references is <a href="docs-src/methods-index.html"><code>docs-src/methods-index.md</code></a>; the change log is in <a href="NEWS.html"><code>NEWS.md</code></a>.</p>
+</div>
+<div class="section level2">
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
+</h2>
+<p>There is no paper yet. Until there is, cite the package:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"varm"</span><span class="op">)</span></span></code></pre></div>
+<p>and the original references of the method you use (see the Features table).</p>
+</div>
+<div class="section level2">
+<h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
+</h2>
+<p>Bug reports and pull requests are welcome at <a href="https://github.com/kvasilopoulos/varm/issues" class="external-link uri">https://github.com/kvasilopoulos/varm/issues</a>. Please include a minimal reproducible example. Changes to an estimator should come with a test that compares against an independent implementation or an exact result, and a note in <code>validation/</code> for anything stochastic. To run the checks from the package root:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">Rscript</span> validation/run-all.R      <span class="co"># unit tests</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="ex">Rscript</span> validation/bayes.R        <span class="co"># heavier statistical validation</span></span></code></pre></div>
+</div>
+</div>
+  </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/kvasilopoulos/varm/" class="external-link">Browse source code</a></li>
@@ -212,30 +991,26 @@
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://cran.r-project.org/package=varm" class="external-link"><img src="https://www.r-pkg.org/badges/version/varm" alt="CRAN status"></a></li>
-<li><a href="https://www.tidyverse.org/lifecycle/#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
+<li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
 <li><a href="https://codecov.io/gh/kvasilopoulos/varm?branch=master" class="external-link"><img src="https://codecov.io/gh/kvasilopoulos/varm/branch/master/graph/badge.svg" alt="Codecov test coverage"></a></li>
 <li><a href="https://github.com/kvasilopoulos/varm/actions" class="external-link"><img src="https://github.com/kvasilopoulos/varm/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
 </ul>
 </div>
 
-  </div>
+  </aside>
 </div>
 
 
-      <footer><div class="copyright">
-  <p></p>
-<p>Developed by <a href="https://kvasilopoulos.com/" class="external-link">Kostas Vasilopoulos</a>.</p>
+    <footer><div class="pkgdown-footer-left">
+  <p>Developed by <a href="https://kvasilopoulos.com/" class="external-link">Kostas Vasilopoulos</a>.</p>
 </div>
 
-<div class="pkgdown">
-  <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
+<div class="pkgdown-footer-right">
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
-      </footer>
+    </footer>
 </div>
-
 
 
 

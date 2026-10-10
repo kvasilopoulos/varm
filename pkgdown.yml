@@ -3,9 +3,15 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   bayesian-var: bayesian-var.html
+  choosing-a-method: choosing-a-method.html
   getting-started: getting-started.html
   identification: identification.html
-last_built: 2026-10-10T21:04Z
+  local-projections: local-projections.html
+  lp-advanced: lp-advanced.html
+  tvp-var: tvp-var.html
+  validation: validation.html
+  var-theory: var-theory.html
+last_built: 2026-10-10T22:40Z
 urls:
   reference: https://kvasilopoulos.github.io/varm/reference
   article: https://kvasilopoulos.github.io/varm/articles
