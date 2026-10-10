@@ -44,7 +44,7 @@ rep_("T4 (M=2, omega=1) ML differs hyper-dependently (different IW dof) -- conve
 # ---- T5: posterior parameters (B-hat, IW scale, dof) at M=3, omega=2, ybar matched ---------------
 lags <- 2; h <- grid[[1]]; b1 <- bvar_ml(h, y, lags, ybar_shift = lags); ols <- varm:::cpp_var_ols(y, lags, matrix(1, nrow(y), 1))
 bb <- matrix(0, 7, 3); bb[cbind(1:3, 1:3)] <- 1
-vv <- varm:::cpp_niw_fixed(c(sqrt(w) / h[1], 2 * h[2], 1 / h[4], 1 / h[3], w * b1$sig^2), ols$Y, ols$X, lags, 1L, TRUE, bb, 1e7, 5L)
+vv <- varm:::cpp_niw_fixed(c(sqrt(w) / h[1], 2 * h[2], 1 / h[4], 1 / h[3], w * b1$sig^2), ols$Y, ols$X, lags, 1L, TRUE, bb, 1e7, colMeans(ols$Y[seq_len(lags), , drop = FALSE]), 1, 5L)
 rep_("T5a posterior mean B-hat equal", mx(vv$bhat, b1$post$B) < 1e-6, "max|diff|=", signif(mx(vv$bhat, b1$post$B), 3))
 rep_("T5b IW scale S equal", mx(vv$S, crossprod(b1$post$u)) / max(abs(vv$S)) < 1e-6, "max rel diff=", signif(mx(vv$S, crossprod(b1$post$u)) / max(abs(vv$S)), 3))
 rep_("T5c posterior IW dof equal (varm nu vs BVAR_ posterior.df)", vv$nu == b1$post$df, "varm nu=", vv$nu, " BVAR_ df=", b1$post$df)

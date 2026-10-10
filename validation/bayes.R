@@ -177,7 +177,7 @@ if (run("s4")) {
   pr0 <- prior_minnesota(psi = psiB); m <- ncol(cpp_var_ols(Y, p, make_det(nrow(Y), TRUE, FALSE, NULL))$X)
   oo <- cpp_var_ols(Y, p, make_det(nrow(Y), TRUE, FALSE, NULL)); bb <- matrix(0, m, M); bb[cbind(1:M, 1:M)] <- 1
   gp <- rbind(gamma_coef(pr0$lambda["mode"], pr0$lambda["sd"]), gamma_coef(2, .25), gamma_coef(1, 1), gamma_coef(1, 1))
-  lpf <- function(l, s, u) cpp_niw_logpost(c(l, 2, s, u, psiB), oo$Y, oo$X, p, 1L, TRUE, bb, 1e7, as.integer(c(1, 0, 1, 1, 0, 0, 0)), gp,
+  lpf <- function(l, s, u) cpp_niw_logpost(c(l, 2, s, u, psiB), oo$Y, oo$X, p, 1L, TRUE, bb, 1e7, colMeans(oo$Y[seq_len(p), , drop = FALSE]), 1, as.integer(c(1, 0, 1, 1, 0, 0, 0)), gp,
                                            c(1e-4, 1, 1e-4, 1e-4, rep(0, M)), c(5, 3, 50, 50, rep(Inf, M)), c(.004, .004), FALSE)
   gl <- exp(seq(log(0.02), log(5), length.out = 80)); gs <- exp(seq(log(0.01), log(50), length.out = 50))
   Lg <- array(0, c(80, 50, 50)); for (i in 1:80) for (j in 1:50) for (k in 1:50) Lg[i, j, k] <- lpf(gl[i], gs[j], gs[k]) + log(gl[i] * gs[j] * gs[k])

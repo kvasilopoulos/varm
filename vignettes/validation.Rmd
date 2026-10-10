@@ -215,7 +215,8 @@ if (have("BVAR")) {
   gamma_coef <- varm:::gamma_coef
   gp <- rbind(gamma_coef(.2, .4), gamma_coef(2, .25), gamma_coef(1, 1), gamma_coef(1, 1))
   h <- c(bv$optim$par[["lambda"]], 2, bv$optim$par[["soc"]], bv$optim$par[["sur"]], bv$priors$psi$mode)
-  v <- varm:::cpp_niw_logpost(h, ols$Y, ols$X, p, 1L, TRUE, b, 1e7, c(1L, 0L, 1L, 1L, 0L, 0L, 0L), gp,
+  # BVAR takes its dummy means from the regression sample, so pass those rows here (bvarm() uses the presample)
+  v <- varm:::cpp_niw_logpost(h, ols$Y, ols$X, p, 1L, TRUE, b, 1e7, colMeans(ols$Y[1:p, ]), 1, c(1L, 0L, 1L, 1L, 0L, 0L, 0L), gp,
                               c(1e-4, 1, 1e-4, 1e-4, 0, 0, 0), c(5, 3, 50, 50, Inf, Inf, Inf), c(.004, .004), FALSE)
   cat(sprintf("log posterior: BVAR %.10f  varm %.10f  |diff| = %s (relative %s)\n",
               bv$optim$value, v, sci(abs(v - bv$optim$value)), sci(abs(v - bv$optim$value) / abs(v))))
