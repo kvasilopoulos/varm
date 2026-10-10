@@ -314,7 +314,7 @@ horizon, response and band level:</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 7</span></span></span>
 <span><span class="co">#&gt;   horizon response  estimate std.error level  conf.low conf.high</span></span>
 <span><span class="co">#&gt;     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>       0 infl     -<span style="color: #BB0000;">1.24</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-14</span>  1.37<span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span>   0.9 -<span style="color: #BB0000;">2.39</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span>  2.14<span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>       0 infl      1.51<span style="color: #949494;">e</span><span style="color: #BB0000;">-14</span>  9.62<span style="color: #949494;">e</span><span style="color: #BB0000;">-14</span>   0.9 -<span style="color: #BB0000;">1.43</span><span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span>  1.73<span style="color: #949494;">e</span><span style="color: #BB0000;">-13</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>       1 infl     -<span style="color: #BB0000;">5.89</span><span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>  4.20<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.9 -<span style="color: #BB0000;">1.28</span><span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>  1.01<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>       2 infl     -<span style="color: #BB0000;">6.16</span><span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>  7.23<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>   0.9 -<span style="color: #BB0000;">1.81</span><span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>  5.74<span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>       3 infl     -<span style="color: #BB0000;">3.15</span><span style="color: #949494;">e</span><span style="color: #BB0000;">- 2</span>  1.05<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>   0.9 -<span style="color: #BB0000;">2.04</span><span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span>  1.41<span style="color: #949494;">e</span><span style="color: #BB0000;">- 1</span></span></span>
@@ -675,7 +675,7 @@ point to VAR misspecification or to LP noise.</p>
 <span><span class="va">cmp</span></span>
 <span><span class="co">#&gt; &lt;lp_var_cmp&gt; shock 'unemp', 2 lags; mean |LP - VAR| / se_LP by horizon block:</span></span>
 <span><span class="co">#&gt;         infl  rate unemp</span></span>
-<span><span class="co">#&gt; short  0.274 0.276 0.701</span></span>
+<span><span class="co">#&gt; short  0.252 0.276 0.377</span></span>
 <span><span class="co">#&gt; medium 0.498 0.152 0.344</span></span>
 <span><span class="co">#&gt; long   0.189 0.519 0.500</span></span>
 <span><span class="va">cmp</span> <span class="op">|&gt;</span></span>
@@ -683,7 +683,7 @@ point to VAR misspecification or to LP noise.</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   horizon     lp lp_se    var   diff      z</span></span>
-<span><span class="co">#&gt; 1       0  0.000 0.000  0.000  0.000 -0.329</span></span>
+<span><span class="co">#&gt; 1       0  0.000 0.000  0.000  0.000  0.220</span></span>
 <span><span class="co">#&gt; 2       4 -0.904 0.240 -0.790 -0.114 -0.476</span></span>
 <span><span class="co">#&gt; 3       8 -1.005 0.357 -0.815 -0.190 -0.533</span></span>
 <span><span class="co">#&gt; 4      12 -0.675 0.318 -0.613 -0.062 -0.194</span></span></code></pre></div>

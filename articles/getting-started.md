@@ -291,7 +291,7 @@ h <- hd(fit)
 dim(h$contributions)             # time x variable x shock
 #> [1] 213   3   3
 max(abs(h$actual - h$baseline - apply(h$contributions, c(1, 2), sum)))   # exact identity
-#> [1] 8.881784e-16
+#> [1] 4.440892e-16
 ```
 
 ``` r

@@ -180,7 +180,7 @@ me <- lp_state(yraw, shock = rate, state = unemp, horizon = 8, lags = 2, timing 
 c(high = max(abs(me$estimate[, , "high"] - t(ref$irf_s1_mean[, , 3]))),
   low  = max(abs(me$estimate[, , "low"]  - t(ref$irf_s2_mean[, , 3]))))
 #>         high          low 
-#> 1.213196e-13 1.543765e-13
+#> 1.198208e-13 1.549871e-13
 ```
 
 The point estimates agree to numerical precision. The
@@ -535,7 +535,7 @@ c(default = min(eigen(j$vcov[[1]])$values),
   common_nw_lag = min(eigen(lp_joint(yraw, rate, 16, lags = 2, contemp = c(infl, unemp), responses = unemp,
                                      nw_lag = 17)$vcov[[1]])$values))
 #>       default common_nw_lag 
-#> -8.774400e-05  1.728649e-28
+#> -8.774400e-05  9.003126e-28
 ```
 
 The default has a (slightly) negative smallest eigenvalue; with a common
