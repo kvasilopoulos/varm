@@ -8,7 +8,7 @@ template:
   # MathJax for the formula-heavy vignettes
   includes:
     in_header: |
-      <script>window.MathJax = {tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]}};</script>
+      <script>window.MathJax = {tex: {inlineMath: [['\x24', '\x24'], ['\\(', '\\)']]}};</script>
       <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 
 authors:
