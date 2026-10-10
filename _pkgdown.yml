@@ -2,96 +2,167 @@ title: varm
 url: https://kvasilopoulos.github.io/varm
 
 template:
+  bootstrap: 5
   params:
     bootswatch: cosmo
+  # MathJax for the formula-heavy vignettes
+  includes:
+    in_header: |
+      <script>window.MathJax = {tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]}};</script>
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 
 authors:
   Kostas Vasilopoulos:
     href: https://kvasilopoulos.com/
 
+# Reference index: every topic in man/ appears exactly once (checked by a script, see NEWS/validation notes).
 reference:
-
-  - title: Estimation
+  - title: Reduced-form VAR
+    desc: Estimation, lag selection and stability.
     contents:
       - varm
       - var_select
-      - lag_matrices
       - stability
-      - bvarm
-      - prior_minnesota
-      - prior_triangular
-      - lp
-      - volatility
+      - lag_matrices
+
+  - title: Impulse responses, decompositions, forecasts
+    desc: "`irf()`, `fevd()`, `hd()` and `forecast()` for VAR, BVAR and draws objects."
+    contents:
+      - dynamics
+      - normalise_to
 
   - title: Uncertainty
+    desc: Bootstrap and Monte Carlo draws of the reduced form.
     contents:
       - draws
 
-  - title: Dynamics
-    contents:
-      - irf
-      - fevd
-      - hd
-      - forecast
-
-  - title: Identification
+  - title: Structural identification
+    desc: Recursive, long-run, sign, zero and sign, zero-pattern, heteroskedasticity and user-supplied schemes.
     contents:
       - identification
-      - starts_with("id_")
+      - id_restrictions
+      - id_zerosign
+      - id_hetero
+      - irf_fry_pagan
 
-  - title: Proxy SVAR
+  - title: Proxy-SVAR (external instruments)
+    desc: Proxy identification, bootstrap, weak-instrument robust and Bayesian inference.
     contents:
+      - id_proxy
+      - proxy_fstat
+      - proxy_draws
       - varm_proxy
       - varm_proxy_robust
-      - proxy_fstat
+      - varm_proxy_bayes
+      - varm_proxy_arw
+      - varm_proxy_gkr
 
-  - title: Data
+  - title: Bayesian VAR
+    desc: Conjugate NIW (Minnesota, sum-of-coefficients, single-unit-root) and triangular (shrinkage, stochastic volatility) samplers, with diagnostics.
+    contents:
+      - bvarm
+      - prior_minnesota
+      - prior_triangular
+      - volatility
+      - mcmc_diagnostics
+
+  - title: Time-varying parameter VAR
+    desc: TVP-VAR with stochastic volatility and its time-varying dynamics.
+    contents:
+      - tvpvar
+      - tvp_prior
+      - tvp_dynamics
+      - irf_path
+      - tvp_volatility
+
+  - title: Local projections
+    desc: Linear, IV, joint, state-dependent, smooth and panel local projections; direct forecasts.
+    contents:
+      - lp
+      - lp_joint
+      - lp_supt
+      - lp_state
+      - lp_smooth
+      - lp_panel
+      - lp_forecast
+      - compare_lp_var
+
+  - title: Tidy output
+    desc: "`tidy()`, `glance()` and `augment()` methods (tibbles with broom column names; `as_tibble()` is an alias of `tidy()`)."
+    contents:
+      - tidy.varm
+      - tidy.varm_irf
+      - tidy.varm_forecast
+      - tidy.varm_hd
+      - tidy.bvarm
+      - tidy.tvpvar
+      - tidy.lpm
+
+  - title: Plots
+    desc: "`autoplot()` methods return ggplot2 objects; `plot()` prints the same figure. `theme_varm()` and `varm_palette()` style them."
+    contents:
+      - autoplot.varm_irf
+      - autoplot.varm_forecast
+      - autoplot.varm_hd
+      - autoplot.varm_draws
+      - autoplot.mcmc_diagnostics
+      - autoplot.lpm
+      - theme_varm
+
+  - title: Data and re-exports
     contents:
       - yraw
+      - reexports
 
-  - title: Plotting and tidying
+  - title: Package
     contents:
-      - plot.varm_dyn
-      - as.data.frame.varm_dyn
-
+      - varm-package
 
 articles:
-  - title: Articles
-    navbar: ~
+  - title: Start here
+    navbar: Articles
     contents:
       - getting-started
+
+  - title: Theory and methods
+    contents:
+      - var-theory
       - identification
       - bayesian-var
+      - tvp-var
+      - local-projections
+      - lp-advanced
+
+  - title: Choosing and validating
+    contents:
+      - choosing-a-method
+      - validation
 
 navbar:
-  type: default
   structure:
-    left:
-    - home
-    - reference
-    - articles
-    right:
-    - news
-    - github
+    left:  [intro, reference, articles, news]
+    right: [search, github]
   components:
-    home:
-      icon: fa-home fa-lg
-      href: index.html
-    reference:
-      text: Reference
-      href: reference/index.html
     articles:
       text: Articles
       menu:
         - text: Getting started
           href: articles/getting-started.html
-        - text: Identification
+        - text: "-------"
+        - text: "Reduced-form VAR: theory and inference"
+          href: articles/var-theory.html
+        - text: Structural identification
           href: articles/identification.html
-        - text: Bayesian VAR
+        - text: Bayesian VARs
           href: articles/bayesian-var.html
-    news:
-      text: News
-      href: news/index.html
-    github:
-      icon: fa-github fa-lg
-      href: https://github.com/kvasilopoulos/varm
+        - text: Time-varying parameter VAR
+          href: articles/tvp-var.html
+        - text: Local projections
+          href: articles/local-projections.html
+        - text: Advanced local projections
+          href: articles/lp-advanced.html
+        - text: "-------"
+        - text: Choosing a method
+          href: articles/choosing-a-method.html
+        - text: Validation report
+          href: articles/validation.html
