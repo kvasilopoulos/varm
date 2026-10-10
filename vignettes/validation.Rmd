@@ -46,7 +46,7 @@ they matter.
 From the package root:
 
 ```sh
-# unit tests (65 tests, 728 expectations; about 17 s)
+# unit tests (846 expectations; about 15 s)
 Rscript validation/run-all.R                    # same as testthat::test_dir("tests/testthat")
 
 # heavier validation scripts (not run by run-all.R)
@@ -67,7 +67,7 @@ listed under `Suggests`; tests that need one skip when it is missing
 this report uses it).
 
 At the time of writing the test suite gives
-65 tests / 728 expectations / 0 failures / 0 skips (about 17 s), over ten files:
+846 expectations / 0 failures / 5 skips (about 15 s), over ten files. The skips are the comparisons against `vars`, `lpirfs` and `psvar`, which did not load on the machine used for this update (see section 6):
 
 | file | covers |
 |---|---|
@@ -618,6 +618,28 @@ These are the findings of the checks above that a user should know about.
    Choose `tvp_prior(kQ = )` with care and check the sensitivity.
 8. **Speed claims are specific to the machine and the settings** (section 4).
    `BVAR::bvar` is faster at $K=20$.
+9. **Differences from the MATLAB toolboxes are conventions, not errors.** The
+   BEAR, VAR-Toolbox and BVAR_ comparisons (`validation/DIARY.md`) found
+   these differences: the Minnesota AR variance divisor is $n-p$ here and
+   $n-2p-1$ in BEAR; `alpha` is twice BEAR's `lambda3`; the inverse-Wishart
+   degrees of freedom are $T-k$ here and $T-k-K-1$ in BVAR_; bootstrap residuals
+   are rescaled by $\sqrt{T_e/(T_e-m)}$ (bands 6-7% wider than VAR-Toolbox,
+   undocumented in `?draws`); forecast bands include parameter uncertainty (BEAR's
+   do not); `fevd()` under `id_proxy` returns 100% for the proxy shock
+   (VAR-Toolbox: 17% at $h=48$ on Gertler-Karadi data).
+10. **Zero-filled proxies are only neutral for a mean-zero instrument.** The
+    proxy functions zero-fill missing instrument values and use uncentred
+    moments. This leaves normalised responses unchanged only if the instrument
+    has mean zero on its observed sample; on the Gertler-Karadi data the IRFs move
+    by 1.6-4.6%. Demean the instrument on its observed sample first.
+11. **Dummy-observation priors were corrected after the toolbox comparison.**
+    The sum-of-coefficients and single-unit-root dummies now use the $p$ presample
+    observations (they used observations $p+1$ to $2p$), the unit-root dummy covers
+    exogenous columns, and the marginal likelihood updates the dummy block's
+    posterior (it gave -595.5 against -630.4 for BEAR's formula on one example). After
+    the fix the BEAR posterior checks agree within Monte Carlo error. The
+    log marginal likelihood with sum-of-coefficients alone equals BEAR's formula;
+    with both dummies together it still differs by 0.045 log units, not yet explained.
 
 ## 6. What has *not* been validated
 
@@ -632,6 +654,15 @@ These are the findings of the checks above that a user should know about.
   is no external reference implementation compared.
 * `forecast()` is checked for the point forecast against `vars`; density
   forecasts and `hd()` are not compared with another package.
+* The MATLAB toolboxes were not run. The BEAR, VAR-Toolbox and BVAR_ checks use
+  R ports of their `.m` code (BEAR's ports are also checked against its stored
+  `.mat` results; the other two only by internal consistency). Methods with no
+  varm counterpart (narrative signs, FAVAR, mixed-frequency, panel and threshold
+  VARs, conditional forecasts) and BEAR's stochastic-volatility and TVP models
+  are not compared.
+* The comparisons against `vars`, `BVAR`, `lpirfs`, `bsvars` and `svars` need
+  those packages to load; on the machine used for the last run they did not (stale
+  library paths under Homebrew R), so those tests were skipped.
 * Missing values are rejected with an error (not handled), and nothing here
   covers VARs larger than $K=20$.
 
