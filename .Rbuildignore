@@ -24,3 +24,10 @@
 ^rv\.lock$
 ^\.Rprofile$
 ^figure$
+^rv$
+^rv\.lock$
+^rproject\.toml$
+^air\.toml$
+^jarl\.toml$
+^\.Rprofile$
+^NEWS\.md$

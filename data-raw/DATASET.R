@@ -1,5 +1,3 @@
-## code to prepare `DATASET` dataset goes here
-
-yraw <- readr::read_tsv("data-raw/Yraw.dat", col_names = FALSE)
-
-usethis::use_data(yraw, overwrite = TRUE)
+## code to prepare `yraw` dataset
+yraw <- utils::read.table("data-raw/Yraw.dat", col.names = c("infl", "unemp", "rate"))
+save(yraw, file = "data/yraw.rda", compress = "bzip2", version = 2)

@@ -13,7 +13,8 @@ License: GPL-3
 URL: https://kvasilopoulos.github.io/varm, https://github.com/kvasilopoulos/varm
 BugReports: https://github.com/kvasilopoulos/varm/issues
 Depends: R (>= 4.0.0)
-Imports: Rcpp (>= 1.0.0), ggplot2, rlang, stats
+Imports: Rcpp (>= 1.0.0), generics, ggplot2, rlang, splines, stats,
+    tibble, tidyselect
 LinkingTo: Rcpp, RcppArmadillo
 Suggests: knitr, rmarkdown, testthat (>= 3.0.0), vars, BVAR, lpirfs, bsvars,
     svars, sandwich, mvtnorm, spelling
