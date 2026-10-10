@@ -1,0 +1,4 @@
+[lint]
+select = ["ALL"]
+# unused_function: exported/S3 or internal helpers; internal_function: tests may use `:::`
+ignore = ["unused_function", "internal_function", "if_not_else"]

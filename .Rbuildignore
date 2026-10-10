@@ -13,3 +13,12 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^archive$
+^validation$
+^docs-src$
+^\.claude$
+^air\.toml$
+^jarl\.toml$
+^rproject\.toml$
+^rv$
+^rv\.lock$

@@ -1,0 +1,10 @@
+[project]
+name = "varm"
+r_version = "4.6"
+repositories = [
+    { alias = "PPM", url = "https://packagemanager.posit.co/cran/latest" },
+]
+dependencies = [
+    { name = "varm", path = ".", install_suggestions = true },
+    "devtools", "pkgdown", "roxygen2", "covr",
+]
