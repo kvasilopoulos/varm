@@ -1,0 +1,123 @@
+---
+title: "Getting started with varm"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with varm}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+library(varm)
+set.seed(1)
+```
+
+## What is implemented
+
+This table was compiled from the package source (`R/`, `src/*.cpp`), not from
+the package description. Items marked "not yet" appear in the `DESCRIPTION`,
+`_pkgdown.yml` or notes but have no code.
+
+| Area | Implemented | Entry point |
+|---|---|---|
+| Reduced-form VAR | OLS with constant, linear trend, exogenous regressors; lag selection (AIC, HQ, SC, FPE); `summary`, `coef`, `resid`, `fitted`, `vcov`, `logLik`; companion-matrix stability | `varm()`, `var_select()`, `stability()` |
+| Uncertainty | residual bootstrap, wild bootstrap (Rademacher, Mammen), asymptotic Monte Carlo, Kilian bias correction | `draws()`, `irf(ci = )` |
+| Dynamics | IRFs (with bands, normalisation, cumulation), FEVD, historical decomposition, forecasts with bands | `irf()`, `fevd()`, `hd()`, `forecast()` |
+| SVAR identification | Cholesky, Blanchard-Quah long-run, sign restrictions (Haar rotations), user-supplied impact matrix | `id_chol()`, `id_longrun()`, `id_sign()`, `id_given()` |
+| Bayesian VAR | conjugate Normal-inverse-Wishart with Minnesota, sum-of-coefficients and single-unit-root priors; exact sampling for fixed hyperparameters, Metropolis for hierarchical hyperparameters | `bvarm()`, `prior_minnesota()` |
+| Proxy SVAR | `varm_proxy()`, `varm_proxy_robust()` | |
+| Not yet | heteroskedasticity identification, narrative/zero restrictions, stochastic volatility, shrinkage (SSVS) priors, TVP-VAR, FAVAR, local projections, data simulation helper | |
+
+The `_pkgdown.yml` reference index also lists `favar`, `autoplot.varm`,
+`autolayer.varm` and `sim_var`; none of these exist in the code.
+
+## Data
+
+`yraw` holds three quarterly US series (columns `X1`-`X3`: inflation,
+unemployment and the interest rate in the Koop-Korobilis data set). We rename
+them and drop the tibble class.
+
+```{r data}
+y <- as.matrix(yraw)
+colnames(y) <- c("inflation", "unemployment", "rate")
+y <- ts(y, start = 1953, frequency = 4)
+dim(y)
+```
+
+## Lag selection and estimation
+
+```{r select}
+var_select(y, pmax = 6)$selection
+fit <- varm(y, p = 2)
+fit
+```
+
+```{r summary}
+summary(fit)
+stability(fit)   # moduli of companion eigenvalues, all < 1 for a stationary VAR
+```
+
+`coef(fit)` returns the `(Kp + d) x K` coefficient matrix (lags first, then
+deterministic terms); `lag_matrices(fit)` returns the `K x K x p` array of
+lag matrices.
+
+```{r lags}
+round(lag_matrices(fit)[, , 1], 3)
+```
+
+## Impulse responses
+
+`irf()` defaults to a Cholesky identification and a residual bootstrap. The
+result stores the point estimate in `$estimate` (response x shock x horizon)
+and bands in `$bands`.
+
+```{r irf}
+ir <- irf(fit, id = id_chol(), horizon = 16, nboot = 300)
+ir
+dim(ir$estimate)
+```
+
+Use `ci = "none"` for point estimates only, or `"wild"`, `"wild_mammen"`,
+`"mc"` for the other draw generators. `normalise` rescales a shock (here a
+unit shock to the rate), and `cumulative` accumulates responses of variables
+entered in differences.
+
+```{r irf-opts}
+ir_wild <- irf(fit, horizon = 16, ci = "wild", nboot = 300,
+               normalise = list(shock = "rate", variable = "rate", size = 1))
+```
+
+## Plotting
+
+`plot()` on an IRF or FEVD object draws a response-by-shock grid. The return
+value depends on the installed version (base graphics or ggplot2), so the
+code below only calls `plot()` and the optional subsetting arguments.
+
+```{r plot, fig.height = 4}
+plot(ir, shocks = "rate")
+```
+
+`as.data.frame()` gives a tidy table for your own plots.
+
+```{r tidy}
+head(as.data.frame(ir), 4)
+```
+
+## FEVD, historical decomposition and forecasts
+
+```{r fevd}
+fv <- fevd(fit, horizon = 12, ci = "none")
+round(fv$estimate[, , 13], 3)    # response x shock at horizon 12
+```
+
+```{r hd}
+h <- hd(fit)
+dim(h$contributions)             # time x variable x shock
+```
+
+```{r fc}
+fc <- forecast(fit, h = 8, nboot = 300)
+fc
+dim(fc$bands)                    # horizon x variable x probability
+```

@@ -1,0 +1,107 @@
+---
+title: "Bayesian VAR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Bayesian VAR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+library(varm)
+set.seed(7)
+y <- as.matrix(yraw)
+colnames(y) <- c("inflation", "unemployment", "rate")
+```
+
+`bvarm()` fits a conjugate Normal-inverse-Wishart BVAR with the prior of
+Giannone, Lenza and Primiceri (2015), specified by `prior_minnesota()`:
+
+- Minnesota shrinkage with overall tightness `lambda` and lag decay `alpha`;
+- sum-of-coefficients (`soc`) and single-unit-root (`sur`) dummy-observation
+  priors, each of which can be dropped by passing `NULL`;
+- the inverse-Wishart scale `psi` (AR(p) residual variances by default);
+- prior mean of the own first lag `delta` (1 for levels, 0 for growth rates).
+
+Every hyperparameter is `c(mode, sd, min, max)` of a gamma hyperprior. The
+character vector `hyper` selects which are estimated; the rest stay fixed.
+
+## Fixed hyperparameters: exact posterior draws
+
+With `hyper = character(0)` the posterior is sampled exactly (no MCMC, so
+`nburn` is unused).
+
+```{r fixed}
+pr <- prior_minnesota(lambda = 0.2, soc = NULL, sur = NULL, hyper = character(0))
+fit0 <- bvarm(y, p = 2, prior = pr, ndraw = 1000)
+fit0
+```
+
+## Hierarchical hyperparameters
+
+By default `lambda`, `soc` and `sur` are estimated: the mode is found by
+`optim()` and a compiled Metropolis sampler with adaptive scale draws the
+hyperparameters; coefficients and covariances are then drawn directly.
+
+```{r hier}
+fit <- bvarm(y, p = 2, ndraw = 1000, nburn = 500)
+fit
+colMeans(fit$hyper)
+fit$accept       # Metropolis acceptance rate
+fit$logml        # log marginal likelihood at the hyperparameter mode
+```
+
+Use `hyper = "full"` to also estimate `alpha` and `psi`. The marginal
+likelihood can be used to compare prior settings or lag lengths.
+
+```{r ml}
+c(p1 = bvarm(y, p = 1, ndraw = 200, nburn = 200)$logml,
+  p2 = fit$logml)
+```
+
+## Posterior summaries, IRFs and forecasts
+
+`summary()` gives posterior means, standard deviations and 5/95% quantiles of
+`B`. The `draws` element is a `varm_draws` object, the same container used by
+the bootstrap, so all identification schemes work.
+
+```{r post}
+s <- summary(fit)
+round(s$mean[1:3, ], 3)
+max(stability(fit))   # largest eigenvalue modulus across draws
+```
+
+```{r irf}
+ir <- irf(fit, id = id_chol(), horizon = 16)
+ir
+```
+
+```{r irf-plot, fig.height = 4}
+plot(ir, shocks = "rate")
+```
+
+Sign restrictions apply to Bayesian draws as well.
+
+```{r sign}
+S <- matrix(0, 3, 3, dimnames = list(colnames(y), c("mp", "s2", "s3")))
+S["rate", "mp"] <- 1; S["inflation", "mp"] <- -1
+irs <- irf(fit, id = id_sign(S, horizon = 2, maxtry = 2000), horizon = 12)
+irs$accept_rate
+```
+
+```{r fc}
+fc <- forecast(fit, h = 8)
+round(fc$mean, 2)
+```
+
+`fevd()` and `hd()` (median over `ndraw` posterior draws) are available as
+well.
+
+## Not yet implemented
+
+Stochastic-volatility, stochastic-search variable selection and other
+shrinkage priors, time-varying-parameter VARs, non-conjugate and
+independent Normal-Wishart priors, Gibbs samplers other than the
+Minnesota/GLP one, and factor-augmented VARs. Although the package
+`DESCRIPTION` mentions them, there is no code behind them yet.
