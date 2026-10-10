@@ -17,8 +17,9 @@ id_given(P)
 id_sign(restrictions, horizon = 1L, nrot = 1L, maxtry = 1000L)
 }
 \arguments{
-\item{order}{variable ordering, as names or integer positions (first = most exogenous);
-defaults to the column order of the data.}
+\item{order}{<\code{\link[tidyselect:language]{tidy-select}}> variable ordering (first
+= most exogenous), e.g. \code{order = c(rate, infl, unemp)}; names, strings and
+positions all work. Defaults to the column order of the data.}
 
 \item{P}{a \verb{K x K} impact matrix.}
 
@@ -47,3 +48,21 @@ with \eqn{PP' = \Sigma}.
 \item \code{id_given()} user supplied impact matrix \eqn{P}.
 }
 }
+\examples{
+fit <- varm(yraw, p = 2)
+id_chol(order = c(rate, infl, unemp))
+irf(fit, id_chol(order = c(rate, infl, unemp)), horizon = 4, ci = "none")
+
+S <- matrix(c(1, 1, 1, 1, -1, 0, 1, 0, 0), 3, 3, byrow = TRUE)
+id_sign(S)
+}
+\seealso{
+Other identification:
+\code{\link[=id_hetero]{id_hetero()}},
+\code{\link[=id_proxy]{id_proxy()}},
+\code{\link[=id_restrictions]{id_restrictions()}},
+\code{\link[=id_zerosign]{id_zerosign()}},
+\code{\link[=irf_fry_pagan]{irf_fry_pagan()}},
+\code{\link[=proxy_draws]{proxy_draws()}}
+}
+\concept{identification}
