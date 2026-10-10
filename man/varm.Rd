@@ -4,10 +4,12 @@
 \alias{varm}
 \title{Estimate a reduced-form VAR by least squares}
 \usage{
-varm(Y, p = 1L, const = TRUE, trend = FALSE, exog = NULL)
+varm(Y, p = 1L, const = TRUE, trend = FALSE, exog = NULL, vars = NULL)
 }
 \arguments{
-\item{Y}{numeric matrix, data frame or \code{ts} (T x K) of endogenous variables.}
+\item{Y}{data frame (preferred), \code{ts} or numeric matrix (T x K) of endogenous
+variables. Non-numeric columns of a data frame are dropped; a \code{Date} column
+is kept as \verb{$dates} and used by the plots.}
 
 \item{p}{lag order.}
 
@@ -15,13 +17,19 @@ varm(Y, p = 1L, const = TRUE, trend = FALSE, exog = NULL)
 
 \item{trend}{include a linear trend.}
 
-\item{exog}{optional T x q matrix of exogenous regressors (contemporaneous, treated
-like deterministic terms; future values are then required for forecasting).}
+\item{exog}{optional T x q matrix or data frame of exogenous regressors
+(contemporaneous, treated like deterministic terms; future values are then
+required for forecasting).}
+
+\item{vars}{<\code{\link[tidyselect:language]{tidy-select}}> columns of \code{Y} that are
+the endogenous variables, e.g. \code{vars = c(infl, rate)}. Default: all numeric
+columns.}
 }
 \value{
 an object of class \code{varm} with elements \code{B} (m x K coefficient matrix,
 lags first then deterministics), \code{Sigma} (degrees-of-freedom corrected),
-\code{U} residuals, \code{XtXinv}, \code{logLik} and metadata.
+\code{U} residuals, \code{XtXinv}, \code{logLik} and metadata. See \code{\link[=tidy.varm]{tidy.varm()}},
+\code{\link[=glance.varm]{glance.varm()}} and \code{\link[=augment.varm]{augment.varm()}} for tibble summaries.
 }
 \description{
 Equation-by-equation OLS (identical to Gaussian ML for the coefficients) of
@@ -36,4 +44,16 @@ of the estimates.
 fit <- varm(yraw, p = 2)
 fit
 summary(fit)
+tidy(fit)
+glance(fit)
+
+# choose the endogenous variables with tidyselect
+varm(yraw, p = 1, vars = c(infl, rate))
 }
+\seealso{
+Other estimation:
+\code{\link[=lag_matrices]{lag_matrices()}},
+\code{\link[=stability]{stability()}},
+\code{\link[=var_select]{var_select()}}
+}
+\concept{estimation}

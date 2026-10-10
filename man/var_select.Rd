@@ -4,10 +4,12 @@
 \alias{var_select}
 \title{Select the VAR lag order}
 \usage{
-var_select(Y, pmax = 8L, const = TRUE, trend = FALSE, exog = NULL)
+var_select(Y, pmax = 8L, const = TRUE, trend = FALSE, exog = NULL, vars = NULL)
 }
 \arguments{
-\item{Y}{numeric matrix, data frame or \code{ts} (T x K) of endogenous variables.}
+\item{Y}{data frame (preferred), \code{ts} or numeric matrix (T x K) of endogenous
+variables. Non-numeric columns of a data frame are dropped; a \code{Date} column
+is kept as \verb{$dates} and used by the plots.}
 
 \item{pmax}{maximum lag.}
 
@@ -15,13 +17,30 @@ var_select(Y, pmax = 8L, const = TRUE, trend = FALSE, exog = NULL)
 
 \item{trend}{include a linear trend.}
 
-\item{exog}{optional T x q matrix of exogenous regressors (contemporaneous, treated
-like deterministic terms; future values are then required for forecasting).}
+\item{exog}{optional T x q matrix or data frame of exogenous regressors
+(contemporaneous, treated like deterministic terms; future values are then
+required for forecasting).}
+
+\item{vars}{<\code{\link[tidyselect:language]{tidy-select}}> columns of \code{Y} that are
+the endogenous variables, e.g. \code{vars = c(infl, rate)}. Default: all numeric
+columns.}
 }
 \value{
-list with \code{selection} (the optimal lag per criterion) and the \code{criteria} matrix.
+list with \code{selection} (the optimal lag per criterion) and the
+\code{criteria} matrix.
 }
 \description{
-Computes AIC, HQ (Hannan-Quinn), SC (Schwarz/BIC) and FPE for lags \verb{1..pmax} on a
-common estimation sample (the first \code{pmax} observations are dropped for every \code{p}).
+Computes AIC, HQ (Hannan-Quinn), SC (Schwarz/BIC) and FPE for lags \verb{1..pmax}
+on a common estimation sample (the first \code{pmax} observations are dropped for
+every \code{p}).
 }
+\examples{
+var_select(yraw, pmax = 4)$selection
+}
+\seealso{
+Other estimation:
+\code{\link[=lag_matrices]{lag_matrices()}},
+\code{\link[=stability]{stability()}},
+\code{\link[=varm]{varm()}}
+}
+\concept{estimation}

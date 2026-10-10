@@ -1,19 +1,28 @@
 #' Reduced-form parameter draws
 #'
 #' Common currency for uncertainty: a `varm_draws` object holds `N` draws of the
-#' coefficient matrix `B` (m x K x N) and innovation covariance `Sigma` (K x K x N).
-#' Bootstrap, asymptotic Monte Carlo and every Bayesian sampler in \pkg{varm} produce one,
-#' so identification, IRFs, FEVDs and forecasts share one code path.
+#' coefficient matrix `B` (m x K x N) and innovation covariance `Sigma`
+#' (K x K x N). Bootstrap, asymptotic Monte Carlo and every Bayesian sampler in
+#' \pkg{varm} produce one, so identification, IRFs, FEVDs and forecasts share one
+#' code path.
 #'
 #' @param object a `varm` fit.
 #' @param method `"bootstrap"` (recursive-design residual bootstrap), `"wild"`
 #'   (Rademacher wild bootstrap, robust to conditional heteroskedasticity),
 #'   `"wild_mammen"` or `"mc"` (asymptotic normal / inverse-Wishart Monte Carlo).
 #' @param n number of draws.
-#' @param bias_correct apply Kilian (1998) bootstrap-after-bootstrap bias correction.
+#' @param bias_correct apply Kilian (1998) bootstrap-after-bootstrap bias
+#'   correction.
 #' @param ... unused.
+#' @family uncertainty
+#' @examples
+#' d <- draws(varm(yraw, p = 2), "mc", n = 50)
+#' d
+#' ggplot2::autoplot(d)
 #' @export
 draws <- function(object, ...) UseMethod("draws")
+
+BOOT_TYPES <- c(bootstrap = 0L, wild = 1L, wild_mammen = 2L)
 
 #' @rdname draws
 #' @export
@@ -26,34 +35,23 @@ draws.varm <- function(
 ) {
   method <- match.arg(method)
   n <- as.integer(n)
-  K <- object$K
-  p <- object$p
-  if (method == "mc") {
-    d <- cpp_var_mc(object$B, object$U, object$XtXinv, n)
-  } else {
-    type <- c(bootstrap = 0L, wild = 1L, wild_mammen = 2L)[[method]]
-    B0 <- object$B
-    U0 <- object$U
-    bias <- NULL
-    if (bias_correct) {
-      d1 <- cpp_var_boot(object$Y, p, object$det, B0, U0, n, type)
-      bias <- apply(d1$B, c(1, 2), mean) - B0
-      B0 <- stationary_adjust(B0 - bias, B0, K, p, bias)
-      U0 <- object$Y[-seq_len(p), , drop = FALSE] - cpp_var_ols_X(object, B0)
-    }
-    d <- cpp_var_boot(object$Y, p, object$det, B0, U0, n, type)
-    if (bias_correct) {
-      for (i in seq_len(n)) {
-        d$B[,, i] <- stationary_adjust(d$B[,, i] - bias, d$B[,, i], K, p, bias)
-      }
-    }
+  if (method == "mc" && bias_correct) {
+    rlang::warn(
+      "`bias_correct` only applies to bootstrap draws; ignored for `method = \"mc\"`"
+    )
   }
+  d <- if (method == "mc") {
+    cpp_var_mc(object$B, object$U, object$XtXinv, n)
+  } else {
+    boot_draws(object, BOOT_TYPES[[method]], n, bias_correct)
+  }
+  dimnames(d$B) <- list(rownames(object$B), object$varnames, NULL)
   structure(
     list(
       B = d$B,
       Sigma = d$Sigma,
-      p = p,
-      K = K,
+      p = object$p,
+      K = object$K,
       varnames = object$varnames,
       method = method,
       fit = object
@@ -62,18 +60,31 @@ draws.varm <- function(
   )
 }
 
-cpp_var_ols_X <- function(object, B) {
-  X <- cpp_var_ols(object$Y, object$p, object$det)$X
-  X %*% B
+boot_draws <- function(object, type, n, bias_correct) {
+  p <- object$p
+  K <- object$K
+  B0 <- object$B
+  U0 <- object$U
+  run <- function(B, U) cpp_var_boot(object$Y, p, object$det, B, U, n, type)
+  if (!bias_correct) {
+    return(run(B0, U0))
+  }
+  bias <- apply(run(B0, U0)$B, c(1, 2), mean) - B0
+  Bc <- stationary_adjust(B0 - bias, B0, K, p, bias)
+  fitted_c <- cpp_var_ols(object$Y, p, object$det)$X %*% Bc
+  d <- run(Bc, object$Y[-seq_len(p), , drop = FALSE] - fitted_c)
+  for (i in seq_len(n)) {
+    Bi <- d$B[,, i]
+    d$B[,, i] <- stationary_adjust(Bi - bias, Bi, K, p, bias)
+  }
+  d
 }
 
 # Kilian (1998) stationarity correction: shrink the bias until the VAR is stable
 stationary_adjust <- function(Bc, B, K, p, bias) {
-  if (max(cpp_stability(Bc, K, p)) < 1) {
-    return(Bc)
-  }
+  is_stable <- function(b) max(cpp_stability(b, K, p)) < 1
   delta <- 1
-  while (delta > 0 && max(cpp_stability(Bc, K, p)) >= 1) {
+  while (!is_stable(Bc) && delta > 0) {
     delta <- delta - 0.01
     Bc <- B - delta * bias
   }

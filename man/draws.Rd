@@ -26,11 +26,19 @@ draws(object, ...)
 
 \item{n}{number of draws.}
 
-\item{bias_correct}{apply Kilian (1998) bootstrap-after-bootstrap bias correction.}
+\item{bias_correct}{apply Kilian (1998) bootstrap-after-bootstrap bias
+correction.}
 }
 \description{
 Common currency for uncertainty: a \code{varm_draws} object holds \code{N} draws of the
-coefficient matrix \code{B} (m x K x N) and innovation covariance \code{Sigma} (K x K x N).
-Bootstrap, asymptotic Monte Carlo and every Bayesian sampler in \pkg{varm} produce one,
-so identification, IRFs, FEVDs and forecasts share one code path.
+coefficient matrix \code{B} (m x K x N) and innovation covariance \code{Sigma}
+(K x K x N). Bootstrap, asymptotic Monte Carlo and every Bayesian sampler in
+\pkg{varm} produce one, so identification, IRFs, FEVDs and forecasts share one
+code path.
 }
+\examples{
+d <- draws(varm(yraw, p = 2), "mc", n = 50)
+d
+ggplot2::autoplot(d)
+}
+\concept{uncertainty}

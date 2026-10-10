@@ -18,3 +18,13 @@ array \verb{[K, K, p]} with \code{A[,,l]} the coefficient matrix on lag \code{l}
 \description{
 Lag coefficient matrices
 }
+\examples{
+lag_matrices(varm(yraw, p = 2))[, , 1]
+}
+\seealso{
+Other estimation:
+\code{\link[=stability]{stability()}},
+\code{\link[=var_select]{var_select()}},
+\code{\link[=varm]{varm()}}
+}
+\concept{estimation}

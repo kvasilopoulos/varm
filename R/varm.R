@@ -4,34 +4,56 @@
 #' \deqn{y_t = c + \sum_{l=1}^p A_l y_{t-l} + \Gamma w_t + u_t,\quad u_t \sim (0,\Sigma).}
 #' The estimation loop is compiled (RcppArmadillo).
 #'
-#' @param Y numeric matrix, data frame or `ts` (T x K) of endogenous variables.
+#' @param Y data frame (preferred), `ts` or numeric matrix (T x K) of endogenous
+#'   variables. Non-numeric columns of a data frame are dropped; a `Date` column
+#'   is kept as `$dates` and used by the plots.
 #' @param p lag order.
 #' @param const include a constant.
 #' @param trend include a linear trend.
-#' @param exog optional T x q matrix of exogenous regressors (contemporaneous, treated
-#'   like deterministic terms; future values are then required for forecasting).
+#' @param exog optional T x q matrix or data frame of exogenous regressors
+#'   (contemporaneous, treated like deterministic terms; future values are then
+#'   required for forecasting).
+#' @param vars <[`tidy-select`][tidyselect::language]> columns of `Y` that are
+#'   the endogenous variables, e.g. `vars = c(infl, rate)`. Default: all numeric
+#'   columns.
 #' @return an object of class `varm` with elements `B` (m x K coefficient matrix,
 #'   lags first then deterministics), `Sigma` (degrees-of-freedom corrected),
-#'   `U` residuals, `XtXinv`, `logLik` and metadata.
+#'   `U` residuals, `XtXinv`, `logLik` and metadata. See [tidy.varm()],
+#'   [glance.varm()] and [augment.varm()] for tibble summaries.
 #' @details See `vignette("var-theory")` for definitions and the economic reading
 #'   of the estimates.
+#' @family estimation
 #' @examples
 #' fit <- varm(yraw, p = 2)
 #' fit
 #' summary(fit)
+#' tidy(fit)
+#' glance(fit)
+#'
+#' # choose the endogenous variables with tidyselect
+#' varm(yraw, p = 1, vars = c(infl, rate))
 #' @export
-varm <- function(Y, p = 1L, const = TRUE, trend = FALSE, exog = NULL) {
+varm <- function(
+  Y,
+  p = 1L,
+  const = TRUE,
+  trend = FALSE,
+  exog = NULL,
+  vars = NULL
+) {
   cl <- match.call()
-  tsp_y <- if (stats::is.ts(Y)) stats::tsp(Y) else NULL
-  Y <- as_data_matrix(Y)
+  tsp_y <- if (stats::is.ts(Y)) stats::tsp(Y)
+  Y <- as_data_matrix(Y, vars = rlang::enquo(vars))
+  dates <- attr(Y, "dates")
+  attr(Y, "dates") <- NULL
   p <- as.integer(p)
   if (p < 1L) {
-    stop("`p` must be >= 1", call. = FALSE)
+    rlang::abort("`p` must be >= 1")
   }
   K <- ncol(Y)
   det <- make_det(nrow(Y), const, trend, exog)
   if (nrow(Y) - p <= K * p + ncol(det)) {
-    stop("not enough observations for p = ", p, call. = FALSE)
+    rlang::abort(paste0("not enough observations for p = ", p))
   }
   est <- cpp_var_ols(Y, p, det)
   vn <- colnames(Y)
@@ -40,9 +62,10 @@ varm <- function(Y, p = 1L, const = TRUE, trend = FALSE, exog = NULL) {
   dimnames(est$Sigma) <- dimnames(est$Sigma_ml) <- list(vn, vn)
   colnames(est$U) <- vn
   dimnames(est$XtXinv) <- list(rn, rn)
+  fields <- est[c("B", "Sigma", "Sigma_ml", "U", "XtXinv", "logLik")]
   structure(
     c(
-      est[c("B", "Sigma", "Sigma_ml", "U", "XtXinv", "logLik")],
+      fields,
       list(
         Y = Y,
         det = det,
@@ -52,6 +75,7 @@ varm <- function(Y, p = 1L, const = TRUE, trend = FALSE, exog = NULL) {
         npar = est$npar,
         varnames = vn,
         detnames = colnames(det),
+        dates = dates,
         tsp = tsp_y,
         call = cl
       )
@@ -62,14 +86,27 @@ varm <- function(Y, p = 1L, const = TRUE, trend = FALSE, exog = NULL) {
 
 #' Select the VAR lag order
 #'
-#' Computes AIC, HQ (Hannan-Quinn), SC (Schwarz/BIC) and FPE for lags `1..pmax` on a
-#' common estimation sample (the first `pmax` observations are dropped for every `p`).
+#' Computes AIC, HQ (Hannan-Quinn), SC (Schwarz/BIC) and FPE for lags `1..pmax`
+#' on a common estimation sample (the first `pmax` observations are dropped for
+#' every `p`).
 #' @inheritParams varm
 #' @param pmax maximum lag.
-#' @return list with `selection` (the optimal lag per criterion) and the `criteria` matrix.
+#' @return list with `selection` (the optimal lag per criterion) and the
+#'   `criteria` matrix.
+#' @family estimation
+#' @examples
+#' var_select(yraw, pmax = 4)$selection
 #' @export
-var_select <- function(Y, pmax = 8L, const = TRUE, trend = FALSE, exog = NULL) {
-  Y <- as_data_matrix(Y)
+var_select <- function(
+  Y,
+  pmax = 8L,
+  const = TRUE,
+  trend = FALSE,
+  exog = NULL,
+  vars = NULL
+) {
+  Y <- as_data_matrix(Y, vars = rlang::enquo(vars))
+  attr(Y, "dates") <- NULL
   det <- make_det(nrow(Y), const, trend, exog)
   ic <- cpp_var_ic(Y, as.integer(pmax), det)
   dimnames(ic) <- list(seq_len(pmax), c("AIC", "HQ", "SC", "FPE"))
@@ -110,8 +147,12 @@ logLik.varm <- function(object, ...) {
 #' Lag coefficient matrices
 #'
 #' @param object a `varm`/`bvarm` object or a coefficient matrix.
+#' @param ... unused.
 #' @return array `[K, K, p]` with `A[,,l]` the coefficient matrix on lag `l`
 #'   (row = equation, column = regressor variable).
+#' @family estimation
+#' @examples
+#' lag_matrices(varm(yraw, p = 2))[, , 1]
 #' @export
 lag_matrices <- function(object, ...) UseMethod("lag_matrices")
 #' @export
@@ -207,6 +248,9 @@ print.summary.varm <- function(x, digits = 4, ...) {
 #' A VAR is covariance stationary iff all moduli are < 1.
 #' @param object a `varm` or `bvarm` object.
 #' @return numeric vector of moduli (descending); for Bayesian objects, a matrix `draws x Kp`.
+#' @family estimation
+#' @examples
+#' stability(varm(yraw, p = 2))
 #' @export
 stability <- function(object) UseMethod("stability")
 #' @export

@@ -15,3 +15,13 @@ numeric vector of moduli (descending); for Bayesian objects, a matrix \verb{draw
 \description{
 A VAR is covariance stationary iff all moduli are < 1.
 }
+\examples{
+stability(varm(yraw, p = 2))
+}
+\seealso{
+Other estimation:
+\code{\link[=lag_matrices]{lag_matrices()}},
+\code{\link[=var_select]{var_select()}},
+\code{\link[=varm]{varm()}}
+}
+\concept{estimation}

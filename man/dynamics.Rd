@@ -95,11 +95,13 @@ forecast(object, ...)
 
 \item{horizon}{maximum horizon (impact is horizon 0).}
 
-\item{normalise}{optional \code{list(shock =, variable =, size =)}: rescale each shock so that the
-impact response of \code{variable} equals \code{size} (e.g. a 100bp policy-rate shock).}
+\item{normalise}{optional \code{\link[=normalise_to]{normalise_to()}} specification (the older
+\code{list(shock =, variable =, size =)} still works): rescale each shock so that
+the impact response of \code{variable} equals \code{size} (e.g. a 100bp policy-rate shock).}
 
-\item{cumulative}{character/integer vector of variables whose responses are cumulated over
-the horizon (use for variables entered in differences).}
+\item{cumulative}{<\code{\link[tidyselect:language]{tidy-select}}> variables whose
+responses are cumulated over the horizon (use for variables entered in
+differences), e.g. \code{cumulative = c(infl, unemp)}.}
 
 \item{.fevd}{internal; compute the variance decomposition instead of the IRF.}
 
@@ -112,7 +114,26 @@ the horizon (use for variables entered in differences).}
 \value{
 \code{varm_irf} / \code{varm_fevd} objects with \verb{$estimate} (\verb{[K, K, H+1]}, response x shock x horizon;
 median across draws when draws exist) and \verb{$bands} (\verb{[K, K, H+1, 2*length(level)]}).
+Use \link[=tidy.varm_irf]{tidy()} for a tibble and \link[=autoplot.varm_irf]{autoplot()} for a plot.
 }
 \description{
 Impulse responses, variance decompositions, historical decompositions, forecasts
 }
+\examples{
+fit <- varm(yraw, p = 2)
+r <- irf(fit, horizon = 8, ci = "mc", nboot = 100, cumulative = infl)
+r
+tidy(r)
+ggplot2::autoplot(r)
+
+# a 100bp policy-rate shock
+irf(fit, horizon = 4, ci = "none", normalise = normalise_to(rate, rate, 1))
+
+fevd(fit, horizon = 8, ci = "none")
+forecast(fit, h = 4)
+}
+\seealso{
+Other dynamics:
+\code{\link[=normalise_to]{normalise_to()}}
+}
+\concept{dynamics}
