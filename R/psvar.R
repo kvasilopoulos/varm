@@ -102,7 +102,10 @@ varm_proxy <- function(
   r <- ncol(M)
   iP <- resolve_var(target, fit$varnames, "target")
   if (length(iP) != r || anyDuplicated(iP)) {
-    stop("`target` must have one distinct variable per instrument", call. = FALSE)
+    stop(
+      "`target` must have one distinct variable per instrument",
+      call. = FALSE
+    )
   }
   size <- rep_len(size, r)
   Me <- M[-seq_len(p), , drop = FALSE]
@@ -144,7 +147,9 @@ varm_proxy <- function(
       drop(stats::cor(Me, eps)^2)
     } else {
       sort(
-        Re(eigen(solve(stats::cov(Me), cm %*% t(cm)), only.values = TRUE)$values),
+        Re(
+          eigen(solve(stats::cov(Me), cm %*% t(cm)), only.values = TRUE)$values
+        ),
         decreasing = TRUE
       )
     }
@@ -162,7 +167,12 @@ varm_proxy <- function(
       nb <- Tp - ell + 1L
       # recentring: mean of within-block position s over all nb blocks
       posmean <- function(A) {
-        do.call(rbind, lapply(seq_len(ell), function(s) colMeans(A[s:(s + nb - 1L), , drop = FALSE])))
+        do.call(
+          rbind,
+          lapply(seq_len(ell), function(s) {
+            colMeans(A[s:(s + nb - 1L), , drop = FALSE])
+          })
+        )
       }
       cU <- posmean(fit$U)
       cM <- posmean(Me)
@@ -175,8 +185,16 @@ varm_proxy <- function(
         idx <- as.vector(outer(seq_len(ell), st, function(s, i) s + i - 1L))
         pos <- rep_len(seq_len(ell), N * ell)
         keep <- seq_len(Tp)
-        Ub <- (fit$U[idx, , drop = FALSE] - cU[pos, , drop = FALSE])[keep, , drop = FALSE]
-        Mb <- (Me[idx, , drop = FALSE] - cM[pos, , drop = FALSE])[keep, , drop = FALSE]
+        Ub <- (fit$U[idx, , drop = FALSE] - cU[pos, , drop = FALSE])[
+          keep,
+          ,
+          drop = FALSE
+        ]
+        Mb <- (Me[idx, , drop = FALSE] - cM[pos, , drop = FALSE])[
+          keep,
+          ,
+          drop = FALSE
+        ]
       } else {
         wb <- if (method == "wild") {
           sample(c(-1, 1), Tp, replace = TRUE)
@@ -234,7 +252,11 @@ proxy_B1 <- function(Su, Sum, Smm, iP) {
   S22 <- S[-i1, -i1, drop = FALSE]
   B21B11 <- beta[-i1, , drop = FALSE] %*% solve(beta[i1, , drop = FALSE])
   A <- S21 - B21B11 %*% S11
-  Zeta <- B21B11 %*% S11 %*% t(B21B11) - (S21 %*% t(B21B11) + B21B11 %*% t(S21)) + S22
+  Zeta <- B21B11 %*%
+    S11 %*%
+    t(B21B11) -
+    (S21 %*% t(B21B11) + B21B11 %*% t(S21)) +
+    S22
   B12B12 <- t(A) %*% solve(Zeta) %*% A
   B11B11 <- S11 - B12B12
   if (r == 1L) {
@@ -385,7 +407,12 @@ print.varm_proxy <- function(x, ...) {
     )
   }
   if (!is.null(x$reliability)) {
-    cat("instrument reliability: ", paste(format(x$reliability, digits = 3), collapse = ", "), "\n", sep = "")
+    cat(
+      "instrument reliability: ",
+      paste(format(x$reliability, digits = 3), collapse = ", "),
+      "\n",
+      sep = ""
+    )
   }
   invisible(x)
 }

@@ -223,7 +223,9 @@ autoplot.varm_forecast <- function(
   }
   if ("level" %in% names(d)) {
     d$model <- "Baseline"
-    p <- p + band_ribbon(d) + ggplot2::scale_fill_manual(values = varm_palette(1))
+    p <- p +
+      band_ribbon(d) +
+      ggplot2::scale_fill_manual(values = varm_palette(1))
   }
   p +
     ggplot2::geom_line(colour = varm_palette(1), linewidth = 0.8) +

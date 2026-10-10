@@ -15,13 +15,23 @@ proxy_first_stage <- function(fit, m, pm = 0L) {
   pm <- as.integer(pm)
   Z <- cbind(fit$Y[-seq_len(p), , drop = FALSE], proxy_X(fit))
   if (pm > 0L) {
-    Z <- cbind(Z, do.call(cbind, lapply(seq_len(pm), function(l) M[(pm + 1L - l):(Te - l), , drop = FALSE])))
+    Z <- cbind(
+      Z,
+      do.call(
+        cbind,
+        lapply(seq_len(pm), function(l) {
+          M[(pm + 1L - l):(Te - l), , drop = FALSE]
+        })
+      )
+    )
   }
   rows <- (pm + 1L):Te
   Z <- Z[rows, , drop = FALSE]
   Mr <- M[rows, , drop = FALSE]
   df <- nrow(Z) - ncol(Z)
-  if (df <= r) stop("too few observations for the first-stage regression", call. = FALSE)
+  if (df <= r) {
+    stop("too few observations for the first-stage regression", call. = FALSE)
+  }
   ZZi <- solve(crossprod(Z))
   Ch <- ZZi %*% crossprod(Z, Mr)
   E <- Mr - Z %*% Ch
@@ -36,25 +46,41 @@ proxy_first_stage_draw <- function(fs, N) {
   D <- array(0, c(r, fs$K, N))
   Ups <- array(0, c(r, r, N))
   for (n in seq_len(N)) {
-    U <- solve(matrix(W[, , n], r, r))
+    U <- solve(matrix(W[,, n], r, r))
     Cf <- fs$Ch + fs$L %*% matrix(stats::rnorm(q * r), q, r) %*% chol(U)
-    D[, , n] <- t(Cf[seq_len(fs$K), , drop = FALSE])
-    Ups[, , n] <- U
+    D[,, n] <- t(Cf[seq_len(fs$K), , drop = FALSE])
+    Ups[,, n] <- U
   }
   list(D = D, Ups = Ups)
 }
 
 # K x K x Hs sign cube; `S` is K x ncol(cols)(xH) for the proxy shocks (cols = last r columns) or K x K(xH)
 proxy_sign_cube <- function(S, K, r, horizon, proxy_only) {
-  if (is.null(S)) return(array(0, c(K, K, 1L)))
+  if (is.null(S)) {
+    return(array(0, c(K, K, 1L)))
+  }
   nc <- if (proxy_only) r else K
-  if (length(dim(S)) == 2L) S <- array(rep(S, horizon), c(dim(S), horizon))
+  if (length(dim(S)) == 2L) {
+    S <- array(rep(S, horizon), c(dim(S), horizon))
+  }
   if (length(dim(S)) != 3L || dim(S)[1] != K || dim(S)[2] != nc) {
-    stop("`signs` must be K x ", nc, " or K x ", nc, " x H", if (proxy_only) " (columns = the r proxy shocks)", call. = FALSE)
+    stop(
+      "`signs` must be K x ",
+      nc,
+      " or K x ",
+      nc,
+      " x H",
+      if (proxy_only) " (columns = the r proxy shocks)",
+      call. = FALSE
+    )
   }
   S[is.na(S)] <- 0
-  if (!all(S %in% c(-1, 0, 1))) stop("`signs` entries must be -1, 0 or +1", call. = FALSE)
-  if (!proxy_only) return(S)
+  if (!all(S %in% c(-1, 0, 1))) {
+    stop("`signs` entries must be -1, 0 or +1", call. = FALSE)
+  }
+  if (!proxy_only) {
+    return(S)
+  }
   out <- array(0, c(K, K, dim(S)[3]))
   out[, K - r + seq_len(r), ] <- S
   out
@@ -67,9 +93,14 @@ proxy_reliability <- function(D, Ups, Sigma) {
 }
 
 proxy_draws_check <- function(fit) {
-  if (!inherits(fit, "bvarm")) stop("`fit` must be a bvarm object", call. = FALSE)
+  if (!inherits(fit, "bvarm")) {
+    stop("`fit` must be a bvarm object", call. = FALSE)
+  }
   if (length(dim(fit$draws$Sigma)) != 3L || !is.null(fit$Sigma_mean)) {
-    stop("`fit` has a constant innovation covariance (stochastic-volatility fits are not supported)", call. = FALSE)
+    stop(
+      "`fit` has a constant innovation covariance (stochastic-volatility fits are not supported)",
+      call. = FALSE
+    )
   }
 }
 
@@ -170,29 +201,63 @@ varm_proxy_arw <- function(
   K <- fit$K
   p <- fit$p
   H <- as.integer(horizon)
-  id <- id_proxy_bayes(fit, m, target, size, signs, reliability, pm, nrot, maxtry, sign_horizon)
+  id <- id_proxy_bayes(
+    fit,
+    m,
+    target,
+    size,
+    signs,
+    reliability,
+    pm,
+    nrot,
+    maxtry,
+    sign_horizon
+  )
   r <- id$r
   Bs <- fit$draws$B
   Ss <- fit$draws$Sigma
   N <- dim(Bs)[3]
-  idx <- if (is.null(ndraw) || ndraw >= N) seq_len(N) else sort(sample.int(N, ndraw))
-  si <- id$structural(Bs[, , idx, drop = FALSE], Ss[, , idx, drop = FALSE], K, p, H, id, fit$varnames)
-  irf4 <- si$irf[, , , , drop = FALSE]
+  idx <- if (is.null(ndraw) || ndraw >= N) {
+    seq_len(N)
+  } else {
+    sort(sample.int(N, ndraw))
+  }
+  si <- id$structural(
+    Bs[,, idx, drop = FALSE],
+    Ss[,, idx, drop = FALSE],
+    K,
+    p,
+    H,
+    id,
+    fit$varnames
+  )
+  irf4 <- si$irf[,,,, drop = FALSE]
   Na <- dim(irf4)[4]
   bd <- array(0, c(H + 1L, K, r, Na))
   for (j in seq_len(r)) {
-    bd[, , j, ] <- aperm(irf4[, K - r + j, , ], c(2, 1, 3))
+    bd[,, j, ] <- aperm(irf4[, K - r + j, , ], c(2, 1, 3))
   }
   iP <- resolve_var(target, fit$varnames, "target")
   sn <- if (r == 1L) NULL else paste0("shock", seq_len(r))
   out <- list(
-    horizon = H, p = p, K = K, r = r, varnames = fit$varnames, target = iP,
+    horizon = H,
+    p = p,
+    K = K,
+    r = r,
+    varnames = fit$varnames,
+    target = iP,
     size = if (is.null(size)) NA_real_ else rep_len(size, r),
-    level = level, method = "arw", accept_rate = si$accept_rate,
+    level = level,
+    method = "arw",
+    accept_rate = si$accept_rate,
     nacc = Na
   )
   out <- proxy_bands(out, bd, level, fit$varnames, sn)
-  out$estimate <- proxy_drop(apply(bd, 1:3, stats::median), r, list(0:H, fit$varnames, sn))
+  out$estimate <- proxy_drop(
+    apply(bd, 1:3, stats::median),
+    r,
+    list(0:H, fit$varnames, sn)
+  )
   structure(out, class = "varm_proxy")
 }
 
@@ -215,18 +280,31 @@ id_proxy_bayes <- function(
   K <- fit$K
   iP <- resolve_var(target, fit$varnames, "target")
   if (length(iP) != r || anyDuplicated(iP)) {
-    stop("`target` must have one distinct variable per instrument", call. = FALSE)
+    stop(
+      "`target` must have one distinct variable per instrument",
+      call. = FALSE
+    )
   }
-  if (r >= K) stop("need fewer instruments than variables", call. = FALSE)
-  if (!is.null(reliability) && (length(reliability) != 1L || reliability < 0 || reliability >= 1)) {
+  if (r >= K) {
+    stop("need fewer instruments than variables", call. = FALSE)
+  }
+  if (
+    !is.null(reliability) &&
+      (length(reliability) != 1L || reliability < 0 || reliability >= 1)
+  ) {
     stop("`reliability` must be a number in [0, 1)", call. = FALSE)
   }
   structure(
     list(
-      type = "proxy_bayes", fs = fs, r = r, target = iP,
+      type = "proxy_bayes",
+      fs = fs,
+      r = r,
+      target = iP,
       size = if (is.null(size)) NULL else rep_len(size, r),
       S = proxy_sign_cube(signs, K, r, sign_horizon, TRUE),
-      reliability = reliability, nrot = as.integer(nrot), maxtry = as.integer(maxtry),
+      reliability = reliability,
+      nrot = as.integer(nrot),
+      maxtry = as.integer(maxtry),
       structural = proxy_bayes_structural
     ),
     class = c("id_proxy_bayes", "varm_id")
@@ -240,26 +318,65 @@ proxy_bayes_structural <- function(Bs, Ss, K, p, H, id, varnames) {
   keep <- seq_len(N)
   rel <- NULL
   if (!is.null(id$reliability)) {
-    rel <- vapply(keep, function(n) {
-      proxy_reliability(matrix(fd$D[, , n], r, K), matrix(fd$Ups[, , n], r, r), matrix(Ss[, , n], K, K))
-    }, 0)
+    rel <- vapply(
+      keep,
+      function(n) {
+        proxy_reliability(
+          matrix(fd$D[,, n], r, K),
+          matrix(fd$Ups[,, n], r, r),
+          matrix(Ss[,, n], K, K)
+        )
+      },
+      0
+    )
     keep <- which(rel >= id$reliability)
-    if (!length(keep)) stop("no draw satisfied the reliability threshold", call. = FALSE)
+    if (!length(keep)) {
+      stop("no draw satisfied the reliability threshold", call. = FALSE)
+    }
   }
   o <- cpp_proxy_rot(
-    Bs[, , keep, drop = FALSE], Ss[, , keep, drop = FALSE], fd$D[, , keep, drop = FALSE],
-    p, H, id$S, id$nrot, id$nrot, id$maxtry, -1L, -1L, 0
+    Bs[,, keep, drop = FALSE],
+    Ss[,, keep, drop = FALSE],
+    fd$D[,, keep, drop = FALSE],
+    p,
+    H,
+    id$S,
+    id$nrot,
+    id$nrot,
+    id$maxtry,
+    -1L,
+    -1L,
+    0
   )
   if (!length(o$draw)) {
-    stop("no rotation satisfied the sign restrictions (tries = ", o$tries, ")", call. = FALSE)
+    stop(
+      "no rotation satisfied the sign restrictions (tries = ",
+      o$tries,
+      ")",
+      call. = FALSE
+    )
   }
   H1 <- H + 1L
   cube <- o$irf
-  if (K > r) cube[, seq_len(K - r), ] <- 0
-  if (!is.null(id$size)) {
-    for (j in seq_len(r)) cube <- cpp_normalise(cube, H1, id$target[j] - 1L, K - r + j - 1L, id$size[j])
+  if (K > r) {
+    cube[, seq_len(K - r), ] <- 0
   }
-  list(irf = as_irf4(cube, K, H1), draw = keep[o$draw], accept_rate = sum(o$nacc) / o$tries)
+  if (!is.null(id$size)) {
+    for (j in seq_len(r)) {
+      cube <- cpp_normalise(
+        cube,
+        H1,
+        id$target[j] - 1L,
+        K - r + j - 1L,
+        id$size[j]
+      )
+    }
+  }
+  list(
+    irf = as_irf4(cube, K, H1),
+    draw = keep[o$draw],
+    accept_rate = sum(o$nacc) / o$tries
+  )
 }
 
 # ---- (B) Giacomini-Kitagawa-Read robust Bayes --------------------------------
@@ -357,30 +474,55 @@ varm_proxy_gkr <- function(
   H <- as.integer(horizon)
   fs <- proxy_first_stage(fit, m, pm)
   r <- fs$r
-  if (r >= K) stop("need fewer instruments than variables", call. = FALSE)
+  if (r >= K) {
+    stop("need fewer instruments than variables", call. = FALSE)
+  }
   js <- if (is.null(shock)) K else resolve_var(shock, fit$varnames, "shock")
-  if (length(js) != 1L || js < 1L || js > K) stop("`shock` must be one column in 1..K", call. = FALSE)
+  if (length(js) != 1L || js < 1L || js > K) {
+    stop("`shock` must be one column in 1..K", call. = FALSE)
+  }
   tg <- -1L
   if (!is.null(size)) {
     tg <- resolve_var(target, fit$varnames, "target")
-    if (length(tg) != 1L || length(size) != 1L) stop("with `size`, give one `target` and one `size`", call. = FALSE)
+    if (length(tg) != 1L || length(size) != 1L) {
+      stop("with `size`, give one `target` and one `size`", call. = FALSE)
+    }
     tg <- tg - 1L
   }
   S <- proxy_sign_cube(signs, K, r, sign_horizon, FALSE)
   Bs <- fit$draws$B
   Ss <- fit$draws$Sigma
   N <- dim(Bs)[3]
-  idx <- if (is.null(ndraw) || ndraw >= N) seq_len(N) else sort(sample.int(N, ndraw))
+  idx <- if (is.null(ndraw) || ndraw >= N) {
+    seq_len(N)
+  } else {
+    sort(sample.int(N, ndraw))
+  }
   fd <- proxy_first_stage_draw(fs, length(idx))
   o <- cpp_proxy_rot(
-    Bs[, , idx, drop = FALSE], Ss[, , idx, drop = FALSE], fd$D, p, H, S,
-    as.integer(nq), 1L, as.integer(maxtry), js - 1L, tg, if (is.null(size)) 0 else size
+    Bs[,, idx, drop = FALSE],
+    Ss[,, idx, drop = FALSE],
+    fd$D,
+    p,
+    H,
+    S,
+    as.integer(nq),
+    1L,
+    as.integer(maxtry),
+    js - 1L,
+    tg,
+    if (is.null(size)) 0 else size
   )
   ok <- o$nacc > 0L
   M <- sum(ok)
-  if (M == 0L) stop("identified set empty for every draw (sign restrictions incompatible with the data?)", call. = FALSE)
-  l <- o$lower[, , ok, drop = FALSE]
-  u <- o$upper[, , ok, drop = FALSE]
+  if (M == 0L) {
+    stop(
+      "identified set empty for every draw (sign restrictions incompatible with the data?)",
+      call. = FALSE
+    )
+  }
+  l <- o$lower[,, ok, drop = FALSE]
+  u <- o$upper[,, ok, drop = FALSE]
   vn <- fit$varnames
   dn <- list(0:H, vn)
   probs <- level_probs(level)
@@ -392,19 +534,34 @@ varm_proxy_gkr <- function(
     for (i in seq_len(K)) {
       for (a in seq_len(nl)) {
         z <- gkr_region(l[h, i, ], u[h, i, ], alpha[a])
-        region[h, i, c(rk[a], 2L * nl + 1L - rk[a])] <- c(z[1] - z[2], z[1] + z[2])
+        region[h, i, c(rk[a], 2L * nl + 1L - rk[a])] <- c(
+          z[1] - z[2],
+          z[1] + z[2]
+        )
       }
     }
   }
   dimnames(region) <- list(0:H, vn, format(probs))
   # single-prior (first accepted rotation) posterior of the same response
   cube <- o$irf
-  if (tg >= 0L) cube <- cpp_normalise(cube, H + 1L, tg, js - 1L, size)
+  if (tg >= 0L) {
+    cube <- cpp_normalise(cube, H + 1L, tg, js - 1L, size)
+  }
   sp <- as_irf4(cube, K, H + 1L)[, js, , , drop = FALSE]
   sd <- aperm(array(sp, c(K, H + 1L, dim(sp)[4])), c(2, 1, 3))
   out <- list(
-    horizon = H, p = p, K = K, r = r, varnames = vn, shock = js, target = if (tg >= 0L) tg + 1L else NA_integer_,
-    size = size, level = level, method = "gkr", nq = nq, ndraw = length(idx),
+    horizon = H,
+    p = p,
+    K = K,
+    r = r,
+    varnames = vn,
+    shock = js,
+    target = if (tg >= 0L) tg + 1L else NA_integer_,
+    size = size,
+    level = level,
+    method = "gkr",
+    nq = nq,
+    ndraw = length(idx),
     lower = structure(apply(l, 1:2, mean), dimnames = dn),
     upper = structure(apply(u, 1:2, mean), dimnames = dn),
     region = region,
@@ -413,23 +570,37 @@ varm_proxy_gkr <- function(
     lu = list(l = l, u = u),
     estimate = structure(apply(sd, 1:2, stats::median), dimnames = dn)
   )
-  out <- proxy_bands(out, array(sd, c(H + 1L, K, 1L, dim(sd)[3])), level, vn, NULL)
+  out <- proxy_bands(
+    out,
+    array(sd, c(H + 1L, K, 1L, dim(sd)[3])),
+    level,
+    vn,
+    NULL
+  )
   structure(out, class = "varm_proxy_gkr")
 }
 
 # smallest robust credible interval for one scalar: centre and radius (GKR Algorithm 1, Step 5)
 gkr_region <- function(l, u, alpha) {
-  f <- function(eta) stats::quantile(pmax(abs(eta - l), abs(eta - u)), alpha, names = FALSE)
-  if (all(l == u) && length(unique(l)) == 1L) return(c(l[1], 0))
+  f <- function(eta) {
+    stats::quantile(pmax(abs(eta - l), abs(eta - u)), alpha, names = FALSE)
+  }
+  if (all(l == u) && length(unique(l)) == 1L) {
+    return(c(l[1], 0))
+  }
   lo <- min(l)
   hi <- max(u)
-  if (lo == hi) return(c(lo, 0))
+  if (lo == hi) {
+    return(c(lo, 0))
+  }
   g <- seq(lo, hi, length.out = 101L)
   v <- vapply(g, f, 0)
   k <- which.min(v)
   a <- g[max(1L, k - 1L)]
   b <- g[min(101L, k + 1L)]
-  if (!(a < b)) return(c(g[k], v[k]))
+  if (!(a < b)) {
+    return(c(g[k], v[k]))
+  }
   op <- stats::optimize(f, c(a, b))
   if (op$objective < v[k]) c(op$minimum, op$objective) else c(g[k], v[k])
 }
@@ -437,19 +608,44 @@ gkr_region <- function(l, u, alpha) {
 #' @export
 print.varm_proxy_gkr <- function(x, hs = c(0L, 4L, 8L, 12L), digits = 3, ...) {
   cat(
-    "<varm_proxy_gkr> robust-Bayes bounds, shock ", x$shock, " (", x$r, " proxy",
-    if (x$r > 1) "ies", "; ", if (is.null(x$size)) "1 s.d. shock" else paste0("unit shock, size ", x$size),
-    "), horizon 0..", x$horizon, "\n", x$ndraw, " reduced-form draws, nq = ", x$nq,
-    "; P(identified set non-empty) = ", format(x$prob_nonempty, digits = 3), "\n", sep = ""
+    "<varm_proxy_gkr> robust-Bayes bounds, shock ",
+    x$shock,
+    " (",
+    x$r,
+    " proxy",
+    if (x$r > 1) "ies",
+    "; ",
+    if (is.null(x$size)) {
+      "1 s.d. shock"
+    } else {
+      paste0("unit shock, size ", x$size)
+    },
+    "), horizon 0..",
+    x$horizon,
+    "\n",
+    x$ndraw,
+    " reduced-form draws, nq = ",
+    x$nq,
+    "; P(identified set non-empty) = ",
+    format(x$prob_nonempty, digits = 3),
+    "\n",
+    sep = ""
   )
   hs <- hs[hs <= x$horizon]
   nl <- length(x$level)
-  cat("set of posterior means [lower, upper] and ", format(100 * x$level[nl]), "% robust credible region:\n", sep = "")
+  cat(
+    "set of posterior means [lower, upper] and ",
+    format(100 * x$level[nl]),
+    "% robust credible region:\n",
+    sep = ""
+  )
   for (i in seq_len(x$K)) {
     cat(x$varnames[i], ":\n", sep = "")
     tab <- cbind(
-      lower = x$lower[hs + 1L, i], upper = x$upper[hs + 1L, i],
-      rcr_lo = x$region[hs + 1L, i, 1L], rcr_hi = x$region[hs + 1L, i, 2L * nl]
+      lower = x$lower[hs + 1L, i],
+      upper = x$upper[hs + 1L, i],
+      rcr_lo = x$region[hs + 1L, i, 1L],
+      rcr_hi = x$region[hs + 1L, i, 2L * nl]
     )
     rownames(tab) <- paste0("h=", hs)
     print(round(tab, digits))

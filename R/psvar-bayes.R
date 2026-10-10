@@ -60,7 +60,10 @@ varm_proxy_bayes <- function(
   Bs <- d$B
   Ss <- d$Sigma
   if (length(dim(Ss)) != 3L || !is.null(fit$Sigma_mean)) {
-    stop("`fit` has a constant innovation covariance (stochastic-volatility fits are not supported)", call. = FALSE)
+    stop(
+      "`fit` has a constant innovation covariance (stochastic-volatility fits are not supported)",
+      call. = FALSE
+    )
   }
   p <- fit$p
   K <- fit$K
@@ -69,7 +72,10 @@ varm_proxy_bayes <- function(
   r <- ncol(M)
   iP <- resolve_var(target, fit$varnames, "target")
   if (length(iP) != r || anyDuplicated(iP)) {
-    stop("`target` must have one distinct variable per instrument", call. = FALSE)
+    stop(
+      "`target` must have one distinct variable per instrument",
+      call. = FALSE
+    )
   }
   size <- rep_len(size, r)
   Tp <- nrow(M)
@@ -77,7 +83,11 @@ varm_proxy_bayes <- function(
     stop("too few observations for the measurement regression", call. = FALSE)
   }
   N <- dim(Bs)[3]
-  idx <- if (is.null(ndraw) || ndraw >= N) seq_len(N) else sort(sample.int(N, ndraw))
+  idx <- if (is.null(ndraw) || ndraw >= N) {
+    seq_len(N)
+  } else {
+    sort(sample.int(N, ndraw))
+  }
   X <- proxy_X(fit)
   Yt <- fit$Y[-seq_len(p), , drop = FALSE]
   bd <- array(0, c(H + 1L, K, r, length(idx)))
