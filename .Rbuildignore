@@ -22,3 +22,5 @@
 ^rproject\.toml$
 ^rv$
 ^rv\.lock$
+^\.Rprofile$
+^figure$

@@ -91,7 +91,7 @@ median is not one coherent model; `hd()` for a `varm` fit uses the first
 accepted rotation at the point estimate.
 
 ```{r sign-plot, fig.height = 4}
-plot(ir_sign, shocks = "mp")
+plot(ir_sign, shocks = 1)
 ```
 
 ## User-supplied impact matrix
