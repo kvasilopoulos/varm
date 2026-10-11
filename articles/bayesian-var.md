@@ -171,7 +171,7 @@ variance is $`10^7`$). Check:
 Xd <- diag(1 / sqrt(om)); Yd0 <- Xd %*% b0
 Xa <- rbind(Xd, X); Ya <- rbind(Yd0, Yd)
 max(abs(solve(crossprod(Xa), crossprod(Xa, Ya)) - Bbar))     # OLS on the augmented sample = posterior mean
-#> [1] 1.312067e-13
+#> [1] 5.084821e-14
 ```
 
 This is the way the Minnesota prior was originally implemented
@@ -1211,15 +1211,15 @@ round(tab, 2)
 #>       NIW, fixed hyperparameters (5000 draws) 
 #>                                          0.02 
 #> NIW, hierarchical (3000 draws + 1000 burn-in) 
-#>                                          0.21 
+#>                                          0.26 
 #>            triangular Minnesota (2000 sweeps) 
-#>                                          0.06 
-#>                 triangular SSVS (2000 sweeps) 
-#>                                          0.06 
-#>            triangular horseshoe (2000 sweeps) 
 #>                                          0.07 
+#>                 triangular SSVS (2000 sweeps) 
+#>                                          0.07 
+#>            triangular horseshoe (2000 sweeps) 
+#>                                          0.08 
 #>                 triangular + SV (2000 sweeps) 
-#>                                          0.28
+#>                                          0.43
 ```
 
 How the cost scales with the number of variables is measured by the
@@ -1346,7 +1346,7 @@ round(cmp, 3)                                            # same Cholesky orderin
 #> BVAR   0 0.034 0.07 0.046
 round(c(`varm seconds` = t_v, `BVAR seconds` = t_b), 2)
 #> varm seconds BVAR seconds 
-#>         0.13         0.58
+#>         0.18         1.20
 ```
 
 What to take from this comparison. (i) With the same prior inputs the

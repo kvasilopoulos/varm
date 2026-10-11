@@ -80,7 +80,7 @@ Pq <- Pc %*% Q
 c(`PP' = Sigma for chol` = max(abs(Pc %*% t(Pc) - fit$Sigma)),
   `PP' = Sigma for rotated` = max(abs(Pq %*% t(Pq) - fit$Sigma)))
 #>    PP' = Sigma for chol PP' = Sigma for rotated 
-#>            1.387779e-17            1.387779e-17
+#>            1.387779e-17            2.775558e-17
 round(cbind(chol_col1 = Pc[, 1], rotated_col1 = Pq[, 1]), 3)   # same fit, different "first shock"
 #>       chol_col1 rotated_col1
 #> infl      0.308        0.235
@@ -544,7 +544,7 @@ max(abs(r1$estimate - r0$estimate))                     # same model
 lo2 <- matrix(NA, 2, 2); lo2[1, 2] <- 0
 r2 <- irf(f2, id = id_restrictions(longrun = lo2), horizon = 100, ci = "none")
 max(abs(r2$estimate - irf(f2, id = id_longrun(), horizon = 100, ci = "none")$estimate))
-#> [1] 1.110223e-16
+#> [1] 5.551115e-17
 ```
 
 Mixed schemes are where it earns its keep. A *non-recursive* example: in
@@ -980,8 +980,8 @@ rbind(set_of_means_lower = gk$lower[1, ], set_of_means_upper = gk$upper[1, ],
 #>                               y1           y2         y3
 #> set_of_means_lower  1.599107e-02 8.549768e-02 -1.0057139
 #> set_of_means_upper  5.374786e-01 9.499538e-01  0.5700843
-#> robust_90_lo        2.971017e-05 1.493048e-06 -1.0703288
-#> robust_90_hi        5.928206e-01 9.981811e-01  0.7096259
+#> robust_90_lo        2.971019e-05 1.490977e-06 -1.0703288
+#> robust_90_hi        5.928206e-01 9.981810e-01  0.7096259
 #> single_prior_median 4.474327e-01 8.189190e-01 -0.3899005
 gk$prob_nonempty
 #> [1] 1

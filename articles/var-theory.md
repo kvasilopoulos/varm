@@ -158,7 +158,7 @@ cbind(lm = coef(m1)[-1], varm = coef(fit)[1:6, "rate"])[1:3, ]
 #> unemp.l1 -0.6474938 -0.6474938
 #> rate.l1   0.7766035  0.7766035
 max(abs(summary(m1)$coefficients[-1, 2] - summary(fit)$se[1:6, "rate"]))
-#> [1] 2.123302e-14
+#> [1] 2.206568e-14
 ```
 
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns the
@@ -600,7 +600,7 @@ dim(h$contributions)                     # [time, variable, shock]
 #> [1] 213   3   3
 # the identity y = baseline + sum of contributions holds exactly
 max(abs(h$actual - h$baseline - apply(h$contributions, c(1, 2), sum)))
-#> [1] 4.440892e-16
+#> [1] 8.881784e-16
 ```
 
 ``` r
@@ -1055,7 +1055,7 @@ t_draw <- system.time(draws(fit, "wild", n = 1000))[["elapsed"]]
 t_irf <- system.time(irf(fit, horizon = 20, ci = "wild", nboot = 1000))[["elapsed"]]
 c(varm_ms = 1000 * t_fit, wild_1000_draws_sec = t_draw, irf_1000_wild_draws_sec = t_irf)
 #>                 varm_ms     wild_1000_draws_sec irf_1000_wild_draws_sec 
-#>                   0.170                   0.036                   0.050
+#>                   0.250                   0.043                   0.059
 ```
 
 ## Extensions
