@@ -337,7 +337,7 @@ Check:</p>
 <code class="sourceCode R"><span><span class="va">Xd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">om</span><span class="op">)</span><span class="op">)</span>; <span class="va">Yd0</span> <span class="op">&lt;-</span> <span class="va">Xd</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">b0</span></span>
 <span><span class="va">Xa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">Xd</span>, <span class="va">X</span><span class="op">)</span>; <span class="va">Ya</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">Yd0</span>, <span class="va">Yd</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/solve.html" class="external-link">solve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">crossprod</a></span><span class="op">(</span><span class="va">Xa</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/crossprod.html" class="external-link">crossprod</a></span><span class="op">(</span><span class="va">Xa</span>, <span class="va">Ya</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="va">Bbar</span><span class="op">)</span><span class="op">)</span>     <span class="co"># OLS on the augmented sample = posterior mean</span></span>
-<span><span class="co">#&gt; [1] 1.312067e-13</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 5.084821e-14</span></span></code></pre></div>
 <p>This is the way the Minnesota prior was originally implemented
 (Litterman, 1986; Doan, Litterman and Sims, 1984) and the way
 <code>varm</code> implements the sum-of-coefficients and
@@ -1651,17 +1651,17 @@ on the real data:</p>
 <span>  `triangular + SV (2000 sweeps)`                <span class="op">=</span> <span class="fu">tm</span><span class="op">(</span><span class="fu"><a href="../reference/bvarm.html">bvarm</a></span><span class="op">(</span><span class="va">y</span>, <span class="fl">4</span>, <span class="fu"><a href="../reference/prior_triangular.html">prior_triangular</a></span><span class="op">(</span><span class="st">"minnesota"</span><span class="op">)</span>, ndraw <span class="op">=</span> <span class="fl">1500</span>, nburn <span class="op">=</span> <span class="fl">500</span>, sv <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">tab</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       NIW, fixed hyperparameters (5000 draws) </span></span>
-<span><span class="co">#&gt;                                          0.03 </span></span>
+<span><span class="co">#&gt;                                          0.02 </span></span>
 <span><span class="co">#&gt; NIW, hierarchical (3000 draws + 1000 burn-in) </span></span>
-<span><span class="co">#&gt;                                          0.34 </span></span>
+<span><span class="co">#&gt;                                          0.26 </span></span>
 <span><span class="co">#&gt;            triangular Minnesota (2000 sweeps) </span></span>
-<span><span class="co">#&gt;                                          0.10 </span></span>
+<span><span class="co">#&gt;                                          0.07 </span></span>
 <span><span class="co">#&gt;                 triangular SSVS (2000 sweeps) </span></span>
-<span><span class="co">#&gt;                                          0.10 </span></span>
+<span><span class="co">#&gt;                                          0.07 </span></span>
 <span><span class="co">#&gt;            triangular horseshoe (2000 sweeps) </span></span>
-<span><span class="co">#&gt;                                          0.12 </span></span>
+<span><span class="co">#&gt;                                          0.08 </span></span>
 <span><span class="co">#&gt;                 triangular + SV (2000 sweeps) </span></span>
-<span><span class="co">#&gt;                                          0.42</span></span></code></pre></div>
+<span><span class="co">#&gt;                                          0.44</span></span></code></pre></div>
 <p>How the cost scales with the number of variables is measured by the
 package’s benchmark script (<code>validation/bayes.R</code>, section
 <code>s8</code>): simulated stationary VAR data,
@@ -1858,7 +1858,7 @@ tests the samplers.</p>
 <span><span class="co">#&gt; BVAR   0 0.034 0.07 0.046</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>`varm seconds` <span class="op">=</span> <span class="va">t_v</span>, `BVAR seconds` <span class="op">=</span> <span class="va">t_b</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; varm seconds BVAR seconds </span></span>
-<span><span class="co">#&gt;         0.22         0.73</span></span></code></pre></div>
+<span><span class="co">#&gt;         0.17         0.99</span></span></code></pre></div>
 <p>What to take from this comparison. (i) With the same prior inputs the
 two implementations compute the same marginal likelihood, and the same
 posterior for the hyperparameters (up to Monte Carlo error) and IRFs.

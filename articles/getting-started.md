@@ -291,7 +291,7 @@ h <- hd(fit)
 dim(h$contributions)             # time x variable x shock
 #> [1] 213   3   3
 max(abs(h$actual - h$baseline - apply(h$contributions, c(1, 2), sum)))   # exact identity
-#> [1] 4.440892e-16
+#> [1] 8.881784e-16
 ```
 
 ``` r
@@ -321,6 +321,8 @@ round(fc$mean[c(1, 4, 8, 12), ], 2)
 ``` r
 
 autoplot(fc, n_history = 24)
+#> Warning in ggplot2::geom_ribbon(data = d, mapping, fill = fill, alpha = 0.22, :
+#> Ignoring empty aesthetic: `fill`.
 ```
 
 ![](getting-started_files/figure-html/fc-plot-1.png)

@@ -49,6 +49,8 @@ Other plotting:
 ``` r
 fc <- forecast(varm(yraw, p = 2), h = 8, nboot = 200)
 ggplot2::autoplot(fc)
+#> Warning: Ignoring empty aesthetic: `fill`.
 
 ggplot2::autoplot(fc, variables = rate, n_history = 20)
+#> Warning: Ignoring empty aesthetic: `fill`.
 ```

@@ -328,7 +328,7 @@ returns the long table (<code>time</code>, <code>response</code>,
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">h</span><span class="op">$</span><span class="va">contributions</span><span class="op">)</span>             <span class="co"># time x variable x shock</span></span>
 <span><span class="co">#&gt; [1] 213   3   3</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">h</span><span class="op">$</span><span class="va">actual</span> <span class="op">-</span> <span class="va">h</span><span class="op">$</span><span class="va">baseline</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">h</span><span class="op">$</span><span class="va">contributions</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="va">sum</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>   <span class="co"># exact identity</span></span>
-<span><span class="co">#&gt; [1] 4.440892e-16</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 8.881784e-16</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">h</span>, responses <span class="op">=</span> <span class="va">unemp</span><span class="op">)</span></span></code></pre></div>
 <p><img src="getting-started_files/figure-html/hd-plot-1.png" class="r-plt" alt="" width="630"></p>
@@ -348,7 +348,9 @@ with simulated future shocks.</p>
 <span><span class="co">#&gt; [3,] 2.80  5.35 4.22</span></span>
 <span><span class="co">#&gt; [4,] 2.99  5.39 4.34</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">fc</span>, n_history <span class="op">=</span> <span class="fl">24</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">fc</span>, n_history <span class="op">=</span> <span class="fl">24</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in ggplot2::geom_ribbon(data = d, mapping, fill = fill, alpha = 0.22, :</span></span>
+<span><span class="co">#&gt; Ignoring empty aesthetic: `fill`.</span></span></code></pre></div>
 <p><img src="getting-started_files/figure-html/fc-plot-1.png" class="r-plt" alt="" width="630"></p>
 </div>
 <div class="section level2">

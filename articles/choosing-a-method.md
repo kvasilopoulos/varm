@@ -225,13 +225,13 @@ information criteria:
 v <- vars::VAR(y, p = 2, type = "const")
 cb <- sapply(1:3, function(k) coef(v)[[k]][, 1])
 max(abs(cb[1:6, ] - coef(fit)[1:6, ]))                     # slope coefficients
-#> [1] 2.859935e-13
+#> [1] 3.936296e-13
 max(abs(vars::VARselect(y, lag.max = 8)$criteria[1:3, ] - t(var_select(y, 8)$criteria)[1:3, ]))   # AIC, HQ, SC
-#> [1] 4.440892e-15
+#> [1] 5.329071e-15
 iv <- vars::irf(v, impulse = "rate", response = "infl", n.ahead = 8, ortho = TRUE, boot = FALSE)
 a <- irf(fit, horizon = 8, ci = "none")
 max(abs(iv$irf$rate[, 1] - a$estimate["infl", "rate", ]))   # orthogonalised IRF, same Cholesky ordering
-#> [1] 6.350476e-14
+#> [1] 3.42365e-14
 ```
 
 For local projections the comparison with `lpirfs` is close but not
