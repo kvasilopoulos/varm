@@ -1287,7 +1287,7 @@ load):</p>
 <span><span class="va">t_irf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/dynamics.html">irf</a></span><span class="op">(</span><span class="va">fit</span>, horizon <span class="op">=</span> <span class="fl">20</span>, ci <span class="op">=</span> <span class="st">"wild"</span>, nboot <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>varm_ms <span class="op">=</span> <span class="fl">1000</span> <span class="op">*</span> <span class="va">t_fit</span>, wild_1000_draws_sec <span class="op">=</span> <span class="va">t_draw</span>, irf_1000_wild_draws_sec <span class="op">=</span> <span class="va">t_irf</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                 varm_ms     wild_1000_draws_sec irf_1000_wild_draws_sec </span></span>
-<span><span class="co">#&gt;                   0.250                   0.043                   0.059</span></span></code></pre></div>
+<span><span class="co">#&gt;                   0.240                   0.072                   0.093</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="extensions">Extensions<a class="anchor" aria-label="anchor" href="#extensions"></a>

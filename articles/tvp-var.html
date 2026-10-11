@@ -1060,7 +1060,7 @@ on the machine that built this vignette:</p>
 <code class="sourceCode R"><span><span class="va">t_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/tvpvar.html">tvpvar</a></span><span class="op">(</span><span class="va">yt</span>, p <span class="op">=</span> <span class="fl">2</span>, ndraw <span class="op">=</span> <span class="fl">10000</span>, nburn <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>seconds <span class="op">=</span> <span class="va">t_long</span>, ms_per_sweep <span class="op">=</span> <span class="fl">1000</span> <span class="op">*</span> <span class="va">t_long</span> <span class="op">/</span> <span class="fl">12000</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      seconds ms_per_sweep </span></span>
-<span><span class="co">#&gt;     24.39300      2.03275</span></span></code></pre></div>
+<span><span class="co">#&gt;    24.109000     2.009083</span></span></code></pre></div>
 <p>The cost is linear in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
 and increases quickly with the state dimension

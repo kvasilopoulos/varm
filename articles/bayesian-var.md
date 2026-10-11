@@ -1346,7 +1346,7 @@ round(cmp, 3)                                            # same Cholesky orderin
 #> BVAR   0 0.034 0.07 0.046
 round(c(`varm seconds` = t_v, `BVAR seconds` = t_b), 2)
 #> varm seconds BVAR seconds 
-#>         0.18         1.20
+#>         0.17         1.21
 ```
 
 What to take from this comparison. (i) With the same prior inputs the

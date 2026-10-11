@@ -1055,7 +1055,7 @@ t_draw <- system.time(draws(fit, "wild", n = 1000))[["elapsed"]]
 t_irf <- system.time(irf(fit, horizon = 20, ci = "wild", nboot = 1000))[["elapsed"]]
 c(varm_ms = 1000 * t_fit, wild_1000_draws_sec = t_draw, irf_1000_wild_draws_sec = t_irf)
 #>                 varm_ms     wild_1000_draws_sec irf_1000_wild_draws_sec 
-#>                   0.250                   0.043                   0.059
+#>                   0.240                   0.072                   0.093
 ```
 
 ## Extensions

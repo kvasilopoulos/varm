@@ -814,7 +814,7 @@ built this vignette:
 t_long <- system.time(tvpvar(yt, p = 2, ndraw = 10000, nburn = 2000))[["elapsed"]]
 c(seconds = t_long, ms_per_sweep = 1000 * t_long / 12000)
 #>      seconds ms_per_sweep 
-#>     24.39300      2.03275
+#>    24.109000     2.009083
 ```
 
 The cost is linear in $`T`$ and increases quickly with the state
