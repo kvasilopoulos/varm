@@ -80,6 +80,11 @@ autoplot_dyn <- function(
   }
   if (has_ci && ci == "band") {
     p <- p + band_ribbon(d, multi)
+    if (!multi) {
+      # dotted black bounds of the narrowest band, as in published IRF figures
+      inner <- d[d$level == min(d$level, na.rm = TRUE), ]
+      p <- p + band_lines(inner, "dotted")
+    }
   } else if (has_ci) {
     p <- p + band_lines(d)
   }
@@ -89,10 +94,29 @@ autoplot_dyn <- function(
     ggplot2::scale_colour_manual(values = pal, name = NULL) +
     ggplot2::scale_fill_manual(values = pal, name = NULL) +
     ggplot2::guides(colour = if (multi) "legend" else "none") +
-    ggplot2::facet_grid(response ~ shock, scales = "free_y") +
+    facet_dyn(sh) +
     ggplot2::labs(x = NULL, y = NULL) +
     theme_varm() +
-    ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 0))
+    ggplot2::theme(
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      panel.border = ggplot2::element_rect(colour = "black", linewidth = 0.3),
+      strip.text = ggplot2::element_text(size = 9),
+      strip.text.y = ggplot2::element_text(angle = 0)
+    )
+}
+
+# one shock: a wrapped panel per response, title on top; several: response x shock grid
+facet_dyn <- function(sh) {
+  if (length(sh) == 1L) {
+    ggplot2::facet_wrap(
+      ggplot2::vars(.data$response),
+      scales = "free_y",
+      ncol = 3
+    )
+  } else {
+    ggplot2::facet_grid(response ~ shock, scales = "free_y")
+  }
 }
 
 # nested ribbons: one per level (and model), overlapping with transparency
@@ -125,7 +149,7 @@ band_ribbon <- function(d, multi = TRUE) {
 }
 
 # dashed bound lines instead of shading
-band_lines <- function(d) {
+band_lines <- function(d, linetype = "dashed") {
   b <- function(y) {
     ggplot2::geom_line(
       data = d,
@@ -133,7 +157,7 @@ band_lines <- function(d) {
         y = .data[[y]],
         group = interaction(.data$model, .data$level)
       ),
-      linetype = "dashed",
+      linetype = linetype,
       linewidth = 0.4
     )
   }
