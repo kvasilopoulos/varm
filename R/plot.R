@@ -33,7 +33,6 @@ autoplot_dyn <- function(
   object,
   shocks,
   responses,
-  ylab,
   zero_line,
   ci = "band",
   compare = NULL
@@ -80,31 +79,45 @@ autoplot_dyn <- function(
     p <- p + ggplot2::geom_hline(yintercept = 0, colour = "grey60")
   }
   if (has_ci && ci == "band") {
-    p <- p + band_ribbon(d)
+    p <- p + band_ribbon(d, multi)
   } else if (has_ci) {
     p <- p + band_lines(d)
   }
-  pal <- varm_palette(length(objs))
+  pal <- if (multi) varm_palette(length(objs)) else "black"
   p +
     ggplot2::geom_line(linewidth = 0.8) +
     ggplot2::scale_colour_manual(values = pal, name = NULL) +
     ggplot2::scale_fill_manual(values = pal, name = NULL) +
     ggplot2::guides(colour = if (multi) "legend" else "none") +
     ggplot2::facet_grid(response ~ shock, scales = "free_y") +
-    ggplot2::labs(x = "Horizon (periods)", y = ylab) +
-    theme_varm()
+    ggplot2::labs(x = NULL, y = NULL) +
+    theme_varm() +
+    ggplot2::theme(strip.text.y = ggplot2::element_text(angle = 0))
 }
 
 # nested ribbons: one per level (and model), overlapping with transparency
-band_ribbon <- function(d) {
-  ggplot2::geom_ribbon(
-    data = d,
-    ggplot2::aes(
+band_ribbon <- function(d, multi = TRUE) {
+  # grey shading for a single model; model colours only when comparing
+  if (multi) {
+    mapping <- ggplot2::aes(
       ymin = .data$conf.low,
       ymax = .data$conf.high,
       group = interaction(.data$model, .data$level),
       fill = .data$model
-    ),
+    )
+    fill <- NULL
+  } else {
+    mapping <- ggplot2::aes(
+      ymin = .data$conf.low,
+      ymax = .data$conf.high,
+      group = interaction(.data$model, .data$level)
+    )
+    fill <- "grey50"
+  }
+  ggplot2::geom_ribbon(
+    data = d,
+    mapping,
+    fill = fill,
     alpha = 0.22,
     colour = NA,
     show.legend = FALSE
@@ -141,7 +154,6 @@ autoplot.varm_irf <- function(
     object,
     rlang::enquo(shocks),
     rlang::enquo(responses),
-    "Response",
     TRUE,
     ci,
     compare
@@ -162,7 +174,6 @@ autoplot.varm_fevd <- function(
     object,
     rlang::enquo(shocks),
     rlang::enquo(responses),
-    "Share of forecast error variance",
     FALSE,
     ci,
     compare
