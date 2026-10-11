@@ -101,7 +101,7 @@ autoplot_dyn <- function(
       panel.grid.major = ggplot2::element_line(
         colour = "grey92",
         linewidth = 0.3,
-        linetype = "solid"
+        linetype = "dashed"
       ),
       panel.grid.minor = ggplot2::element_blank(),
       panel.border = ggplot2::element_rect(colour = "black", linewidth = 0.3),
