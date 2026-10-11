@@ -8,3 +8,4 @@ src/*.dll
 rv/library
 archive/
 Rplots.pdf
+docs-src/replaced/
