@@ -98,7 +98,11 @@ autoplot_dyn <- function(
     ggplot2::labs(x = NULL, y = NULL) +
     theme_varm() +
     ggplot2::theme(
-      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.major = ggplot2::element_line(
+        colour = "grey92",
+        linewidth = 0.3,
+        linetype = "solid"
+      ),
       panel.grid.minor = ggplot2::element_blank(),
       panel.border = ggplot2::element_rect(colour = "black", linewidth = 0.3),
       strip.text = ggplot2::element_text(size = 9),
