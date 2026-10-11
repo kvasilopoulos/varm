@@ -1,0 +1,122 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  fig.width = 7, fig.height = 3.2, dpi = 100,
+  out.width = "100%"
+)
+```
+
+# varm
+
+<!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/varm)](https://cran.r-project.org/package=varm)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![Codecov test coverage](https://codecov.io/gh/kvasilopoulos/varm/branch/master/graph/badge.svg)](https://codecov.io/gh/kvasilopoulos/varm?branch=master)
+[![R-CMD-check](https://github.com/kvasilopoulos/varm/workflows/R-CMD-check/badge.svg)](https://github.com/kvasilopoulos/varm/actions)
+<!-- badges: end -->
+
+Fast frequentist and Bayesian vector autoregressions (VAR), structural
+identification and local projections (LP) for R, with an Rcpp/RcppArmadillo
+engine. Every sampler, bootstrap and identification loop runs in compiled code.
+
+The design idea is **one currency for uncertainty**: the bootstrap, the
+asymptotic Monte Carlo and each Bayesian sampler return a `varm_draws` object of
+reduced-form draws $(B, \Sigma)$. `irf()`, `fevd()`, `hd()` and `forecast()`, and every
+identification scheme (`id_chol()`, `id_longrun()`, `id_sign()`, `id_given()`),
+work on that object, so a new estimator inherits all identification schemes and
+a new identification scheme works with every estimator.
+
+## Installation
+
+```r
+# install.packages("pak")
+pak::pak("kvasilopoulos/varm")
+```
+
+A C++ toolchain is required (the package compiles RcppArmadillo code).
+
+## What is in the package
+
+| Area | Methods | Entry points |
+|---|---|---|
+| Reduced-form VAR | OLS/ML, lag selection (AIC, HQ, SC, FPE), stability, summary | `varm()`, `var_select()`, `stability()` |
+| Inference | residual / wild (Rademacher, Mammen) bootstrap, Kilian bias correction, asymptotic Monte Carlo | `draws()`, `irf(ci = )` |
+| Dynamics | IRF, FEVD, historical decomposition, forecasts; unit-impact normalisation and cumulation | `irf()`, `fevd()`, `hd()`, `forecast()` |
+| Identification | Cholesky, Blanchard-Quah long-run, sign restrictions (Haar rotations), user-supplied impact matrix | `id_chol()`, `id_longrun()`, `id_sign()`, `id_given()` |
+| Bayesian VAR (conjugate) | Normal-inverse-Wishart with Minnesota, sum-of-coefficients and single-unit-root priors; closed-form marginal likelihood; hierarchical hyperparameters (GLP) | `bvarm()`, `prior_minnesota()` |
+| Bayesian VAR (triangular) | Minnesota, SSVS and horseshoe priors; stochastic volatility (KSC mixture) | `bvarm(prior = prior_triangular())`, `volatility()` |
+| Local projections | LP, LP-IV, lag augmentation, Newey-West / HC standard errors, cumulative responses | `lp()` |
+| Proxy-SVAR | external-instrument identification with wild bootstrap | `varm_proxy()`, `proxy_fstat()` |
+
+## Example
+
+The `yraw` data set holds three quarterly US series (inflation, unemployment,
+interest rate; Koop and Korobilis, 1953Q1-2006Q3).
+
+```{r example}
+library(varm)
+y <- as.matrix(yraw); colnames(y) <- c("inflation", "unemployment", "rate")
+
+fit <- varm(y, p = 2)
+fit
+```
+
+Responses to a policy-rate shock (recursive identification, rate ordered last) with
+wild-bootstrap bands:
+
+```{r irf, fig.height = 3.2}
+ir <- irf(fit, id = id_chol(), horizon = 16, ci = "wild", nboot = 300)
+par(mfrow = c(1, 3), mar = c(3, 3, 2, 0.6), mgp = c(1.7, 0.5, 0))
+for (v in colnames(y)) {
+  b <- ir$bands[v, "rate", , ]; h <- 0:16
+  plot(h, ir$estimate[v, "rate", ], type = "n", ylim = range(b), xlab = "horizon", ylab = "", main = paste("rate ->", v))
+  polygon(c(h, rev(h)), c(b[, 1], rev(b[, 4])), border = NA, col = adjustcolor("steelblue", 0.2))
+  polygon(c(h, rev(h)), c(b[, 2], rev(b[, 3])), border = NA, col = adjustcolor("steelblue", 0.3))
+  abline(h = 0, col = "grey60"); lines(h, ir$estimate[v, "rate", ], lwd = 2, col = "steelblue4")
+}
+```
+
+The same call works for a Bayesian VAR (hierarchical Minnesota prior; exact draws
+for the coefficients given the hyperparameters, Metropolis for the
+hyperparameters):
+
+```{r bvar}
+bfit <- bvarm(y, p = 2, ndraw = 1000, nburn = 500)
+bfit
+irb <- irf(bfit, id = id_chol(), horizon = 16)
+round(irb$estimate["unemployment", "rate", c(1, 5, 9, 17)], 3)
+```
+
+and a local projection of the same response:
+
+```{r lp}
+lp(y, shock = "rate", horizon = 16, lags = 2, contemp = c("inflation", "unemployment"), lag_augment = TRUE)
+```
+
+## Learn more
+
+* `vignette("var-theory")` - reduced-form VAR: definitions, IRF/FEVD/HD, bootstrap and Monte Carlo inference.
+* `vignette("identification")` - Cholesky, long-run and sign restrictions; Fry-Pagan; normalisation.
+* `vignette("bayesian-var")` - NIW posterior, Minnesota/unit-root priors, GLP hyperparameters, SSVS, horseshoe, stochastic volatility, diagnostics, comparison with `BVAR`.
+* `vignette("local-projections")` - LP, LP-IV, lag augmentation, LP versus VAR bias-variance.
+* `vignette("choosing-a-method")` - decision guide and a map of the VAR/LP literature and R packages (after [awesome-var](https://github.com/kvasilopoulos/awesome-var)).
+* `docs-src/methods-index.md` - index of every method with its reference and where it is implemented.
+
+## Related packages
+
+`vars`, `svars`, `BVAR`, `bsvars`, `bsvarSIGNs`, `lpirfs`, `BigVAR`, `bvartools`:
+see `vignette("choosing-a-method")` for how `varm` relates to them. Results for
+the reduced-form VAR agree with `vars` to machine precision, and the hierarchical
+BVAR agrees with `BVAR` (same prior inputs) up to Monte Carlo error.
+
+## Status
+
+The package is experimental. See `NEWS.md` for the change log.

@@ -1,0 +1,341 @@
+---
+title: "Structural identification: Cholesky, long-run and sign restrictions"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    math_method:
+      engine: mathjax
+      url: https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+vignette: >
+  %\VignetteIndexEntry{Structural identification: Cholesky, long-run and sign restrictions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 3.4, dpi = 90)
+library(varm)
+source("varm-helpers.R")
+set.seed(42)
+y <- as.matrix(yraw)
+colnames(y) <- c("inflation", "unemployment", "rate")
+fit <- varm(y, p = 2)
+```
+
+## 1. The identification problem
+
+The reduced-form VAR delivers innovations $u_t$ with covariance $\Sigma$. A
+structural VAR posits $u_t=P\varepsilon_t$ with orthonormal shocks,
+$E[\varepsilon_t\varepsilon_t']=I_K$, which requires $PP'=\Sigma$. Any such $P$
+can be written $P=\tilde P Q$ where $\tilde P=\mathrm{chol}(\Sigma)$ and $Q$ is
+an orthogonal matrix ($QQ'=I$). The data pin down $\Sigma$, hence $\tilde P$,
+but say nothing about $Q$: there are $K(K-1)/2$ free parameters, and different
+$Q$ give observationally equivalent models with different impulse responses
+$\Theta_h=\Phi_h P$. An *identification scheme* is a set of assumptions that
+selects $Q$ (point identification) or restricts it to a set (set
+identification). Each `id_*()` constructor in `varm` returns such a scheme and
+is passed as the `id` argument of `irf()`, `fevd()` and `hd()`, for both `varm`
+(frequentist) and `bvarm` (Bayesian) fits.
+
+| constructor | assumption | identification |
+|---|---|---|
+| `id_chol(order)` | recursive: $P$ lower triangular after ordering | point |
+| `id_longrun()` | long-run multiplier lower triangular (Blanchard-Quah) | point |
+| `id_sign(restrictions, ...)` | signs of IRFs over some horizons | set |
+| `id_given(P)` | user supplied impact matrix | point |
+
+## 2. Cholesky (recursive) identification
+
+**Definition.** Order the variables $(y_1,\dots,y_K)$. Take
+$P=\mathrm{chol}(\Sigma)$ (lower triangular, positive diagonal). Then shock $j$
+affects variables $j,\dots,K$ on impact but not variables $1,\dots,j-1$:
+variable $i$ responds *contemporaneously* only to shocks $1,\dots,i$. The
+restriction is $K(K-1)/2$ zeros in $P$, which exactly identifies the model.
+
+**Economic story (monetary policy).** Order `inflation`, `unemployment`,
+`rate`. The assumption is that prices and unemployment are predetermined within
+the quarter with respect to monetary policy (they are sticky and do not react to
+a policy surprise in the same quarter), while the central bank sets the rate
+after seeing current inflation and unemployment. The last shock is then the
+monetary-policy shock. This is the classic recursive scheme of Christiano,
+Eichenbaum and Evans (1999).
+
+```{r chol}
+ir1 <- irf(fit, id = id_chol(), horizon = 20, ci = "wild", nboot = 300)
+round(ir1$estimate[, , 1], 3)   # impact matrix P (rows: response, columns: shock): lower triangular
+```
+
+```{r chol-plot}
+plot_irf(ir1, shock = "rate")
+```
+
+A one-standard-deviation policy shock raises the rate by about 0.7 percentage
+points on impact. The path of inflation after the shock is the usual
+diagnostic: a significantly *positive* response (the "price puzzle") signals
+that the recursive scheme or the information set is misspecified: the VAR does
+not contain what the central bank knows (for instance commodity prices or
+forecasts) and the "shock" is partly an anticipated reaction to inflation.
+
+**Ordering matters.** Only the variable ordering, not the choice of recursive
+$P$ given an ordering, is a modelling decision. Moving `rate` first says the
+policy rate is exogenous within the quarter, which is not a monetary-policy
+shock at all. Comparing orderings is a cheap robustness check:
+
+```{r order, fig.height = 3.4}
+ir2 <- irf(fit, id = id_chol(order = c("rate", "inflation", "unemployment")), horizon = 20, ci = "none")
+round(ir2$estimate[, "rate", 1], 3)   # impact responses to the "rate" shock when rate is ordered first
+plot_irf(ir1, shock = "rate", add = ir2)    # solid: rate last; dashed: rate first
+```
+
+The residual correlation (`cor(resid(fit))`) tells you how much the ordering can
+matter: with correlations near zero all orderings agree. Here the rate and
+unemployment residuals have a correlation of about $-0.35$, so the order
+matters for those two.
+
+### Normalisation: one standard deviation vs unit shocks
+
+With $PP'=\Sigma$ shocks have unit variance, so responses are to a
+one-standard-deviation shock. Policy discussions usually want a fixed size
+shock, such as 25 basis points. `irf(normalise = list(shock =, variable =, size =))`
+rescales each shock so that the impact response of `variable` equals `size`
+(draw by draw, so the bands reflect the rescaling too).
+
+```{r norm}
+irn <- irf(fit, horizon = 20, ci = "wild", nboot = 300,
+           normalise = list(shock = "rate", variable = "rate", size = 0.25))
+round(irn$estimate["rate", "rate", 1], 3)           # impact response is exactly 0.25
+round(irn$estimate[, "rate", c(1, 5, 9, 13)], 3)
+```
+
+The normalisation changes only the *scale* of the responses for point
+identified schemes (all of them scale linearly), but for ratios
+across variables it avoids a classic pitfall: comparing responses in
+"standard-deviation units" across models whose shock variances differ.
+
+## 3. Long-run restrictions (Blanchard-Quah)
+
+**Definition.** Let $F=I-\sum_l A_l$. The long-run (cumulative) multiplier of
+the structural shocks is
+$$
+\Theta(1)=\sum_{h=0}^\infty \Theta_h=F^{-1}P .
+$$
+Blanchard and Quah (1989) impose that $\Theta(1)$ is lower triangular: shock
+$j$ has no permanent effect on variables $1,\dots,j-1$. `varm` computes
+$\Theta(1)\Theta(1)'=F^{-1}\Sigma F^{-1\prime}$, takes its Cholesky factor
+$L$, and sets $P=FL$. The order of the variables is the column order of the data.
+
+**Economic story (supply and demand).** In the original application
+$y_t=(\Delta \text{GDP}_t,\ \text{unemployment}_t)'$, the first shock is
+"supply" (the only shock with a permanent effect on output) and the second is
+"demand" (transitory by assumption). Variables must be stationary (growth rates
+or differences) for the long-run matrix to be meaningful. `yraw` has no output series, so we illustrate the
+mechanics with $y_t=(\Delta \pi_t,\ u_t)'$: the first shock is the only one
+that can permanently change the level of inflation (a "nominal trend" shock) and
+the second is transitory for inflation.
+
+```{r longrun}
+d2 <- cbind(dinfl = diff(y[, "inflation"]), unemployment = y[-1, "unemployment"])
+f2 <- varm(d2, p = 2)
+round(max(stability(f2)), 3)
+ir_lr <- irf(f2, id = id_longrun(), horizon = 300, ci = "none")
+round(apply(ir_lr$estimate, c(1, 2), sum), 3)    # cumulated long-run matrix: upper-right entry is 0
+```
+
+**Cumulative responses.** The IRF of a differenced variable is the response of
+its *growth rate*; the response of its *level* is the running sum.
+`cumulative = "dinfl"` cumulates that variable's response over the horizon, for
+each draw, before bands are computed:
+
+```{r cum, fig.height = 3.4}
+ir_c <- irf(f2, id = id_longrun(), horizon = 40, ci = "wild", nboot = 300, cumulative = "dinfl")
+plot_irf(ir_c, shock = "dinfl")        # level of inflation after the permanent (first) shock
+```
+
+The level of inflation converges to a non-zero value after shock 1 (the long-run
+effect by construction) and returns to zero after shock 2 (restricted to
+zero, so the bands pinch near zero at long horizons).
+
+**Pitfalls.**
+
+* The restriction is on the *long-run* multiplier $F^{-1}$, which is poorly estimated when the VAR is near-integrated
+  (Faust and Leeper, 1997; Christiano, Eichenbaum and Vigfusson, 2006): small errors in
+  $\sum_l A_l$ become large errors in $F^{-1}$. Check bands; use bias
+  correction (`bias_correct = TRUE`) or a Bayesian VAR.
+* Whether a variable is modelled in levels or differences changes the
+  identification: over-differencing a stationary variable distorts the restriction.
+* The sign of each column is fixed by the Cholesky factor (positive long-run
+  diagonal), not by economics. Flip signs if you want a "positive supply shock".
+
+## 4. Sign restrictions
+
+**Definition.** Sign restrictions (Faust, 1998; Canova and De Nicolo, 2002;
+Uhlig, 2005) use $S_{ij}(h)\in\{-1,0,+1\}$ and require the IRF of variable $i$
+to shock $j$ to have sign $S_{ij}(h)$ for $h=0,\dots,H_s$. Zero entries mean
+unrestricted. The *identified set* is
+$$
+\mathcal{Q}(B,\Sigma)=\Big\{Q:\ QQ'=I,\ \ \mathrm{sign}\big(e_i'\Phi_h\tilde P Q e_j\big)=S_{ij}(h)\ \text{for all restricted }(i,j,h)\Big\} .
+$$
+The algorithm of Rubio-Ramírez, Waggoner and Zha (2010) draws $Q$ from the
+Haar (uniform) distribution on the orthogonal group, using the QR decomposition
+of a Gaussian matrix, and keeps the draw if every column satisfies the restrictions
+(column sign flips are allowed). For each reduced-form draw, `nrot` accepted
+rotations are retained after up to `maxtry` attempts.
+In the returned objects the shock dimension is labelled with the variable names whatever the scheme,
+so with `id_sign()` index shocks by column position (below: 1 = mp, 2 = demand, 3 = supply).
+The restrictions are a $K\times K$ matrix (rows: variables, columns: shocks)
+imposed over `horizon` periods, or a $K\times K\times H$ array. Zero
+*restrictions* on IRFs (as opposed to unrestricted entries) are not supported
+in this release.
+
+**Economic story.** Three shocks distinguished by textbook New-Keynesian signs:
+
+| shock | inflation | unemployment | interest rate |
+|---|---|---|---|
+| monetary-policy | $-$ | unrestricted | $+$ |
+| demand | $+$ | $-$ | $+$ |
+| supply | $+$ | $+$ | unrestricted |
+
+Each is imposed for the first four quarters (impact plus three). The restrictions
+separate demand from supply by the comovement of inflation and unemployment
+(a Phillips-curve sign) and the policy shock from demand by the response of
+inflation. Leaving the unemployment response to monetary policy unrestricted
+is the Uhlig (2005) "agnostic" approach: the response one most wants to
+learn about is not imposed.
+
+```{r sign-spec}
+S <- matrix(0, 3, 3, dimnames = list(colnames(y), c("mp", "demand", "supply")))
+S["inflation", ]    <- c(-1, 1, 1)
+S["unemployment", ] <- c(0, -1, 1)
+S["rate", ]         <- c(1, 1, 0)
+S
+id_s <- id_sign(S, horizon = 4, nrot = 1, maxtry = 5000)
+```
+
+### Two sources of uncertainty
+
+A set-identified model has two kinds of uncertainty that frequentist or
+Bayesian bands mix together:
+
+1. **Estimation uncertainty** about $(B,\Sigma)$: the usual sampling or posterior variation.
+2. **Identification uncertainty** about $Q$ within $\mathcal Q$: the data cannot say, even in an infinite sample.
+
+Pointwise percentile bands over rotations *and* reduced-form draws combine
+them, so wide bands cannot be read as "the data are uninformative": part of the
+width is a consequence of the researcher's choice to leave $Q$ unrestricted
+within $\mathcal Q$. Using many rotations at the point estimate isolates
+identification uncertainty:
+
+```{r sign-bands, fig.height = 3.6}
+# (a) identification uncertainty only: one reduced-form point, many rotations
+ir_set <- irf(fit, id = id_sign(S, horizon = 4, nrot = 500, maxtry = 1e5), horizon = 16, ci = "none")
+# (b) estimation uncertainty with one rotation per bootstrap draw (mixes both)
+ir_mix <- irf(fit, id = id_s, horizon = 16, ci = "bootstrap", nboot = 500)
+c(accept_rate_point = ir_set$accept_rate, accept_rate_boot = ir_mix$accept_rate)
+dim(ir_set$draws)    # [response, shock, horizon, accepted rotations]
+w <- function(ir, i, j, h) unname(diff(ir$bands[i, j, h, c(1, 4)]))    # width of the 90% band
+round(rbind(`rotations only (at point estimate)` = sapply(c(1, 5, 9), function(h) w(ir_set, "unemployment", 1, h)),
+            `bootstrap + rotations`               = sapply(c(1, 5, 9), function(h) w(ir_mix, "unemployment", 1, h))), 3)
+plot_irf(ir_mix, shock = 1, lab = "mp", add = ir_set)
+```
+
+With a sample of 213 quarters and three variables, the width of the 90% band is
+almost entirely identification uncertainty: rotating at the point estimate
+gives bands about as wide as the full bootstrap (the two rows above). More data
+would shrink the second source of uncertainty but not the first.
+
+The solid line and shaded bands are the bootstrap-plus-rotation result; the
+dashed line is the median of the rotations at the point estimate.
+
+### The median is not a model: Fry-Pagan
+
+Pointwise medians across accepted rotations combine IRFs from different
+rotations $Q^{(n)}$: the median response of unemployment to the "mp" shock may
+come from one $Q$ and the median response of inflation from another, so the
+median path is not the IRF of any single structural model, and responses to
+different shocks need not be orthogonal. Fry and Pagan (2011) propose the single
+draw whose IRFs (all variables, shocks and horizons, standardised) are closest to
+the pointwise median. `draws` holds all accepted IRFs, so the median-target
+(MT) rotation is easy to extract:
+
+```{r fry-pagan, fig.height = 3.6}
+fry_pagan <- function(ir) {
+  a <- matrix(ir$draws, ncol = dim(ir$draws)[4])                  # (K*K*H1) x N
+  med <- apply(a, 1, median); s <- apply(a, 1, sd); s[s == 0] <- 1
+  which.min(colSums(((a - med) / s)^2))
+}
+n_mt <- fry_pagan(ir_set)
+mt <- ir_set$draws[, , , n_mt]
+op <- par(mfrow = c(1, 3), mar = c(3, 3, 2, 0.6), mgp = c(1.7, 0.5, 0))
+for (r in 1:3) {
+  plot(0:16, ir_set$estimate[r, 1, ], type = "l", lwd = 2, col = "steelblue4",
+       ylim = range(ir_set$bands[r, 1, , ], mt[r, 1, ]), xlab = "horizon", ylab = "", main = paste("mp ->", colnames(y)[r]))
+  lines(0:16, ir_set$bands[r, 1, , 1], col = "steelblue", lty = 3); lines(0:16, ir_set$bands[r, 1, , 4], col = "steelblue", lty = 3)
+  lines(0:16, mt[r, 1, ], lwd = 2, col = "firebrick"); abline(h = 0, col = "grey60")
+}
+par(op)
+```
+
+The red line is a coherent structural model; the blue line (pointwise median)
+and the dotted 90% limits summarise the set. Report the MT model when you need
+one consistent decomposition (a historical decomposition or a counterfactual).
+`hd()` with `id_sign()` uses the *first* accepted rotation at the point
+estimate, not the MT rotation, so treat a historical decomposition from a sign
+identified model as an illustration of one admissible model.
+
+**Pitfalls.**
+
+* The prior over $Q$ is *not* uninformative about the IRFs: a uniform Haar prior
+  on rotations implies informative priors on the impulse responses
+  (Baumeister and Hamilton, 2015). With few binding restrictions the posterior
+  is largely the prior.
+* `accept_rate` below a few percent signals that the restrictions are
+  essentially in tension with the data (or too many). A zero acceptance
+  rate stops `irf()` with an error.
+* Restrictions that hold for many horizons are more informative; impact-only
+  restrictions are the weakest.
+* The identification is only as good as the cross-shock restrictions:
+  without a sign pattern that separates the shocks from each other, the
+  identified shocks are not uniquely labelled.
+
+## 5. User-supplied impact matrix
+
+`id_given(P)` accepts any matrix; it does not check $PP'=\Sigma$. Use it to
+reproduce a published impact matrix, or to feed a rotation computed elsewhere
+(for example from an external routine for zero and sign restrictions).
+
+```{r given}
+P <- t(chol(fit$Sigma))
+ir_g <- irf(fit, id = id_given(P), horizon = 8, ci = "none")
+all.equal(unname(ir_g$estimate[, , 1]), unname(P))
+```
+
+## 6. Choosing a scheme and checking it
+
+| question | cheap check |
+|---|---|
+| Is the Cholesky order innocuous? | `cor(resid(fit))`; re-run with another `order`; compare `plot_irf(..., add = )` |
+| Is there a price puzzle? | Sign of the inflation response to the policy shock in the first year |
+| Is the long-run restriction credible? | Width of bands at long horizons; compare to `bias_correct = TRUE` |
+| Do sign restrictions bind? | `accept_rate`; compare the identified-set width to the bootstrap width |
+| Is an FEVD interpretable? | `fevd()` shares are only as good as the identification |
+
+## Extensions (added by module: proxy-SVAR / zero+sign / ARRW)
+
+<!-- STUB: the identification module appends here.
+     - External instruments (proxy SVAR): relevance, F statistics, bootstrap
+     - Zero and sign restrictions (ARRW algorithm), narrative restrictions
+     Do not document functions that are not yet exported. -->
+
+## References
+
+* Baumeister, C. and Hamilton, J. D. (2015). Sign restrictions, structural vector autoregressions, and useful prior information. *Econometrica*, 83(5), 1963-1999.
+* Blanchard, O. J. and Quah, D. (1989). The dynamic effects of aggregate demand and supply disturbances. *American Economic Review*, 79(4), 655-673.
+* Canova, F. and De Nicolo, G. (2002). Monetary disturbances matter for business fluctuations in the G-7. *Journal of Monetary Economics*, 49(6), 1131-1159.
+* Christiano, L. J., Eichenbaum, M. and Evans, C. L. (1999). Monetary policy shocks: what have we learned and to what end? In *Handbook of Macroeconomics*, vol. 1A.
+* Christiano, L. J., Eichenbaum, M. and Vigfusson, R. (2006). Assessing structural VARs. *NBER Macroeconomics Annual*, 21, 1-72.
+* Faust, J. (1998). The robustness of identified VAR conclusions about money. *Carnegie-Rochester Conference Series on Public Policy*, 49, 207-244.
+* Faust, J. and Leeper, E. M. (1997). When do long-run identifying restrictions give reliable results? *Journal of Business & Economic Statistics*, 15(3), 345-353.
+* Fry, R. and Pagan, A. (2011). Sign restrictions in structural vector autoregressions: a critical review. *Journal of Economic Literature*, 49(4), 938-960.
+* Rubio-Ramírez, J. F., Waggoner, D. F. and Zha, T. (2010). Structural vector autoregressions: theory of identification and algorithms for inference. *Review of Economic Studies*, 77(2), 665-696.
+* Sims, C. A. (1980). Macroeconomics and reality. *Econometrica*, 48(1), 1-48.
+* Uhlig, H. (2005). What are the effects of monetary policy on output? Results from an agnostic identification procedure. *Journal of Monetary Economics*, 52(2), 381-419.

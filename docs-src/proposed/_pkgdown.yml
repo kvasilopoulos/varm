@@ -1,0 +1,97 @@
+title: varm
+url: https://kvasilopoulos.github.io/varm
+
+template:
+  bootstrap: 5
+  params:
+    bootswatch: cosmo
+  # MathJax for the formula-heavy vignettes
+  includes:
+    in_header: |
+      <script>window.MathJax = {tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]}};</script>
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+authors:
+  Kostas Vasilopoulos:
+    href: https://kvasilopoulos.com/
+
+# Reference index: every topic in man/ appears exactly once.
+# Modules that add exported functions append to the matching section (marked "Extensions").
+reference:
+  - title: Estimation
+    desc: Reduced-form VAR, lag selection and diagnostics.
+    contents:
+      - varm
+      - var_select
+      - stability
+      - lag_matrices
+
+  - title: Bayesian VAR
+    desc: Conjugate NIW (Minnesota, sum-of-coefficients, single-unit-root) and triangular (shrinkage, stochastic volatility) samplers.
+    contents:
+      - bvarm
+      - prior_minnesota
+      - prior_triangular
+      - volatility
+      # Extensions (added by module TVP-VAR-SV / MCMC diagnostics): append here
+
+  - title: Uncertainty
+    desc: Bootstrap, Monte Carlo and posterior draws.
+    contents:
+      - draws
+
+  - title: Identification
+    desc: Cholesky, long-run, sign restrictions, user impact matrix.
+    contents:
+      - identification
+      - varm_proxy
+      - proxy_fstat
+      # Extensions (added by module proxy/ARRW): append here
+
+  - title: Impulse responses, decompositions, forecasts
+    contents:
+      - dynamics
+      - plot.varm_dyn
+      - as.data.frame.varm_dyn
+      # Extensions (sup-t bands): append here
+
+  - title: Local projections
+    contents:
+      - lp
+      # Extensions (state-dependent / smooth / panel LP): append here
+
+  - title: Package
+    contents:
+      - varm-package
+
+articles:
+  - title: Theory and methods
+    navbar: Articles
+    contents:
+      - getting-started
+      - var-theory
+      - identification
+      - bayesian-var
+      - local-projections
+      - choosing-a-method
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: Getting started
+          href: articles/getting-started.html
+        - text: "Reduced-form VAR: theory and inference"
+          href: articles/var-theory.html
+        - text: Structural identification
+          href: articles/identification.html
+        - text: Bayesian VARs
+          href: articles/bayesian-var.html
+        - text: Local projections
+          href: articles/local-projections.html
+        - text: Choosing a method
+          href: articles/choosing-a-method.html

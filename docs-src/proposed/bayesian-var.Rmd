@@ -1,0 +1,529 @@
+---
+title: "Bayesian VARs: priors, samplers and diagnostics"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    math_method:
+      engine: mathjax
+      url: https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+vignette: >
+  %\VignetteIndexEntry{Bayesian VARs: priors, samplers and diagnostics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 3.4, dpi = 90)
+library(varm)
+source("varm-helpers.R")
+set.seed(7)
+y <- as.matrix(yraw)
+colnames(y) <- c("inflation", "unemployment", "rate")
+yr <- seq(1953, by = 0.25, length.out = nrow(y))
+have_bvar <- requireNamespace("BVAR", quietly = TRUE)
+```
+
+`bvarm()` fits Bayesian VARs with two families of samplers, selected by the
+`prior` argument:
+
+| `prior =` | model | sampler | cost |
+|---|---|---|---|
+| `prior_minnesota()` | conjugate Normal-inverse-Wishart (NIW), Minnesota + sum-of-coefficients + single-unit-root | exact draws (fixed hyperparameters) or Metropolis for hyperparameters, then direct draws | tiny |
+| `prior_triangular()` | triangular, equation-by-equation; Minnesota, SSVS or horseshoe; optional stochastic volatility | Gibbs | linear in $K$ per sweep |
+
+Both return a `bvarm` object whose `$draws` is a `varm_draws` container, the
+same one produced by the bootstrap, so `irf()`, `fevd()`, `hd()`, `forecast()`
+and every identification scheme work unchanged
+(see `vignette("identification")`).
+
+## 1. The conjugate NIW posterior
+
+Write the VAR as $Y=XB+U$, with $Y$ $T\times M$, $X$ $T\times k$ ($k=Mp+d$),
+$U$ rows i.i.d. $N(0,\Sigma)$. With the conjugate prior
+$$
+\mathrm{vec}(B)\mid\Sigma\sim N\big(\mathrm{vec}(b),\ \Sigma\otimes\Omega\big),\qquad
+\Sigma\sim IW(\Psi,\,d),\quad d=M+2,
+$$
+the posterior is of the same family:
+\begin{align}
+\mathrm{vec}(B)\mid\Sigma,Y&\sim N\big(\mathrm{vec}(\bar B),\ \Sigma\otimes\bar\Omega\big), &
+\Sigma\mid Y&\sim IW(\bar\Psi,\ T+d),\\
+\bar\Omega&=(X'X+\Omega^{-1})^{-1}, &
+\bar B&=\bar\Omega\,(X'Y+\Omega^{-1}b),\\
+\bar\Psi&=\Psi+(Y-X\bar B)'(Y-X\bar B)+(\bar B-b)'\Omega^{-1}(\bar B-b).
+\end{align}
+Because the posterior is available in closed form, draws for *fixed*
+hyperparameters are independent (no MCMC, no burn-in). The code below
+verifies the formulas against the output of `bvarm()` for a Minnesota prior
+without dummy observations.
+
+```{r niw-check}
+psi <- c(0.10, 0.12, 0.67)                                  # fixed IW scale, one per variable
+pr0 <- prior_minnesota(lambda = 0.2, alpha = 2, soc = NULL, sur = NULL, psi = psi, hyper = character(0))
+f0  <- bvarm(y, p = 2, prior = pr0, ndraw = 20000)
+p <- 2; M <- 3
+Z  <- embed(y, p + 1); Yd <- Z[, 1:M]; X <- cbind(Z[, -(1:M)], const = 1)
+om <- c(rep(0.2^2 / (1:p)^2, each = M) / rep(psi, p), 1e7)  # prior variance of coef of lag l, variable j: lambda^2 / (l^alpha psi_j)
+b0 <- matrix(0, ncol(X), M); diag(b0[1:M, ]) <- 1           # random-walk prior mean (delta = 1)
+Obar <- solve(crossprod(X) + diag(1 / om))
+Bbar <- Obar %*% (crossprod(X, Yd) + diag(1 / om) %*% b0)
+S    <- diag(psi) + crossprod(Yd - X %*% Bbar) + t(Bbar - b0) %*% diag(1 / om) %*% (Bbar - b0)
+max(abs(coef(f0) - Bbar))                                   # posterior mean of B: Monte Carlo error only
+max(abs(summary(f0)$Sigma - S / (nrow(X) + 1)))             # E[Sigma|Y] = S/(nu - M - 1), nu = T + M + 2
+```
+
+## 2. The Minnesota prior
+
+**Prior.** The coefficient on lag $l$ of variable $j$ in equation $i$ has prior
+mean $\delta_i$ if $i=j,\ l=1$ and zero otherwise, and
+$$
+\mathrm{Var}\big(\beta^{(l)}_{ij}\mid\Sigma\big)=\Sigma_{ii}\ \frac{\lambda^2}{l^{\alpha}\,\psi_j},
+$$
+while the constant has a (nearly) flat variance (`var = 1e7`). This is the
+Giannone, Lenza and Primiceri (2015) parametrisation: $\Psi$ is the scale of the
+inverse-Wishart (by default the AR($p$) residual variances, so that
+$\psi_j$ puts variable $j$ in standard-deviation units), $\lambda$ is the
+overall tightness and $\alpha$ the lag-decay exponent. The original
+Litterman (1986) prior is the dummy-observation special case: the prior is
+equivalent to appending artificial observations
+$$
+Y_d=\begin{pmatrix}\mathrm{diag}(\delta_1\sigma_1,\dots,\delta_M\sigma_M)/\lambda\\ 0\end{pmatrix},\qquad
+X_d=\begin{pmatrix}\mathrm{diag}(1,2^{\alpha},\dots,p^{\alpha})\otimes\mathrm{diag}(\sigma)/\lambda & 0\\0&0\end{pmatrix}
+$$
+(Bańbura, Giannone and Reichlin, 2010), so the posterior mean is OLS on the augmented data.
+
+### Economic intuition / how to use it
+
+$\lambda$ is the prior standard deviation (in units of the residual sd) of the
+first-lag coefficient on *other* variables relative to the own-lag prior
+$\delta$. In words: with $\lambda\to 0$ every variable is a random walk (prior
+mean $\delta=1$) and the data are ignored; $\lambda\to\infty$ is OLS. A
+value around $0.2$ says "I believe each variable is mostly a random walk
+with small spillovers, and spillovers die out like $l^{-\alpha}$". $\alpha=2$
+says that longer lags matter quadratically less. Use `delta = 0` for series in
+growth rates (prior mean white noise, not random walk).
+
+```{r lambda, fig.height = 3.4}
+ols <- coef(varm(y, p = 2))
+lams <- c(0.01, 0.1, 0.2, 1, 10)
+fits <- lapply(lams, function(l)
+  bvarm(y, 2, prior_minnesota(lambda = l, soc = NULL, sur = NULL, hyper = character(0)), ndraw = 500))
+res <- sapply(fits, function(f) c(own = coef(f)["rate.l1", "rate"], cross = coef(f)["inflation.l1", "rate"]))
+colnames(res) <- paste0("lambda=", lams)
+round(cbind(res, OLS = c(own = ols["rate.l1", "rate"], cross = ols["inflation.l1", "rate"])), 3)
+```
+
+The first row is the own first lag in the interest-rate equation, the second
+the coefficient on lagged inflation: as $\lambda$ grows the former moves from 1
+(the prior mean) to the OLS value, and the latter from 0 to OLS.
+
+## 3. Sum-of-coefficients and single-unit-root priors
+
+Two further dummy-observation priors, with $\bar y$ the mean of the first $p$
+observations, encode beliefs about *persistence and cointegration*:
+
+* **Sum of coefficients** (Doan, Litterman and Sims, 1984), tightness $\mu$
+  (`soc`):
+  $y_d=\mathrm{diag}(\bar y)/\mu$, $x_d=\big(\mathbf 1_p'\otimes \mathrm{diag}(\bar y)/\mu,\ 0\big)$.
+  It says that if the average of the lags of *all* variables is constant, the
+  variable stays at that level: a prior for unit roots in each variable and for no
+  cointegration. $\mu\to 0$ is a VAR in differences.
+* **Single unit root / dummy initial observation** (Sims, 1993), tightness
+  $\theta$ (`sur`): $y_d=\bar y'/\theta$, $x_d=\big(\mathbf 1_p'\otimes\bar y'/\theta,\ 1/\theta\big)$.
+  It says that the initial level is a good forecast of every variable: it
+  allows cointegration, with a common stochastic trend, and shrinks
+  towards it.
+
+Pass `soc = NULL`/`sur = NULL` to drop either.
+
+### Economic intuition / how to use it
+
+Unit-root priors help with macro data in levels at long horizons: the OLS VAR is
+biased towards stationarity, so its forecasts mean-revert too fast, and Minnesota
+shrinkage alone does not correct that. They are least useful for variables
+in growth rates. Whether the data want them can be read from the marginal
+likelihood (next section).
+
+## 4. Marginal likelihood and hierarchical hyperparameters
+
+Given the NIW prior, the marginal likelihood of $Y$ is available in closed
+form (with $\hat S=(Y-X\bar B)'(Y-X\bar B)+(\bar B-b)'\Omega^{-1}(\bar B-b)$):
+$$
+\ln p(Y\mid\theta)=-\frac{MT}{2}\ln\pi+\sum_{j=0}^{M-1}\ln\frac{\Gamma\big(\tfrac{T+d-j}{2}\big)}{\Gamma\big(\tfrac{d-j}{2}\big)}
+-\frac{M}{2}\ln\big|I+\Omega^{1/2}X'X\,\Omega^{1/2}\big|+\frac d2\ln|\Psi|-\frac{T+d}{2}\ln\big|\Psi+\hat S\big|,
+$$
+where $\theta=(\lambda,\alpha,\mu,\theta_{sur},\psi)$. When dummy observations
+are present, the likelihood of the *real* data is obtained, as in Giannone et
+al. (2015), by dividing the marginal likelihood of the augmented sample
+by that of the dummies alone. It is returned as `$logml`.
+
+**Hierarchical prior.** Following Giannone, Lenza and Primiceri (2015), the
+hyperparameters get their own prior (a gamma with a given `mode` and `sd`, truncated to
+`[min, max]`; each is specified as `c(mode, sd, min, max)`) and are
+estimated by
+$$
+p(\theta\mid Y)\propto p(Y\mid\theta)\,p(\theta).
+$$
+`bvarm()` first maximises this posterior with `optim()` (L-BFGS-B), uses the
+inverse Hessian as the proposal covariance of a random-walk Metropolis
+sampler (scale adapted during burn-in towards a 25-45% acceptance rate when
+`adapt = TRUE`), and then draws $(B,\Sigma)$ *directly* from the NIW
+posterior at each retained $\theta$. The hyperparameters estimated are listed
+by `hyper` (default `c("lambda", "soc", "sur")`; `"full"` adds `alpha` and `psi`).
+
+```{r ml-grid, fig.height = 3.6}
+grid <- c(0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 0.8, 1.2, 2)
+lml <- sapply(grid, function(l) bvarm(y, 2, prior_minnesota(lambda = l, soc = 0.3, sur = 0.4, hyper = character(0)),
+                                      ndraw = 10)$logml)
+par(mar = c(3.4, 3.4, 2, 0.6), mgp = c(2, 0.6, 0))
+plot(grid, lml, type = "b", log = "x", pch = 16, xlab = expression(lambda), ylab = "log marginal likelihood",
+     main = "Marginal likelihood as a function of overall tightness (soc = 0.3, sur = 0.4)")
+abline(v = grid[which.max(lml)], lty = 2, col = "grey50")
+```
+
+```{r hier}
+fit <- bvarm(y, p = 2, ndraw = 2000, nburn = 1000)
+fit
+fit$accept       # Metropolis acceptance rate
+fit$logml        # log marginal likelihood at the hyperparameter mode
+```
+
+**Which prior does the data prefer?** The marginal likelihood compares
+priors for the same data and the same $p$ (it is *not* comparable across $p$:
+each $p$ drops a different number of initial observations, so the data being
+explained differ).
+
+Maximising over a grid of $\lambda$ (with $\mu=0.3$, $\theta=0.4$ when included):
+
+```{r ml-compare}
+cfg <- list(`Minnesota only`     = list(soc = NULL, sur = NULL),
+            `+ sum-of-coefs`     = list(soc = 0.3, sur = NULL),
+            `+ single unit root` = list(soc = NULL, sur = 0.4),
+            `both`               = list(soc = 0.3, sur = 0.4))
+# best log marginal likelihood over a lambda grid, hyperparameters otherwise fixed
+ml <- sapply(cfg, function(a) max(sapply(grid, function(l)
+  bvarm(y, 2, do.call(prior_minnesota, c(list(lambda = l, hyper = character(0)), a)), ndraw = 10)$logml)))
+round(ml, 1)
+```
+
+Both dummy-observation priors raise the marginal likelihood and the
+single-unit-root prior contributes most: the interest rate and unemployment
+are highly persistent and the sample has few effective turning points. Since the marginal likelihood is a one-step-ahead predictive
+density summed over the sample (the "Bayesian forecast-based" interpretation),
+a large gain for a prior means it forecasts better *on average* over the sample, not that it is true.
+
+### Posterior summaries, IRFs and forecasts
+
+```{r post}
+s <- summary(fit)
+round(s$mean[1:3, ], 3)       # posterior means of the first-lag matrix
+max(stability(fit))           # largest eigenvalue modulus across draws
+ir <- irf(fit, id = id_chol(), horizon = 16)
+ir
+```
+
+```{r irf-plot}
+plot_irf(ir, shock = "rate")
+```
+
+The bands are *posterior credible intervals* (percentiles of the draws), not
+confidence intervals. Compare with the bootstrap bands of the OLS VAR in
+`vignette("var-theory")`: the Bayesian responses to the policy shock decay more
+slowly and the bands are tighter because the prior shrinks the persistence
+parameters towards one.
+
+```{r fc}
+fc <- forecast(fit, h = 8)
+round(fc$mean, 2)
+```
+
+## 5. Triangular sampler: shrinkage priors and stochastic volatility
+
+The conjugate prior ties the prior covariance of the coefficients in every
+equation to $\Sigma$, which forces a cross-equation structure (and a symmetric
+treatment of variables) and rules out stochastic volatility and
+equation-specific shrinkage. The alternative (Cogley and Sargent, 2005;
+Carriero, Clark and Marcellino, 2019; the `prior_triangular()` family) orthogonalises the system:
+$$
+A\,y_t=c+\sum_{l=1}^p\Pi_l y_{t-l}+\Lambda_t^{1/2}\varepsilon_t,\qquad
+\varepsilon_t\sim N(0,I),\ \ \Lambda_t=\mathrm{diag}\big(e^{h_{1t}},\dots,e^{h_{Kt}}\big),
+$$
+with $A$ unit lower triangular. Equation $i$ is a *regression* of $y_{it}$ on
+the lags, the constant and the contemporaneous $y_{1t},\dots,y_{i-1,t}$, with
+(conditionally) independent equations, so each Gibbs sweep costs
+$O(K(Kp)^3)$ rather than $O((K^2p)^3)$ for the joint system. The reduced form is
+$B=\Pi' A'^{-1}$ and $\Sigma_t=A^{-1}\Lambda_tA^{-1\prime}$.
+These draws are stored as reduced-form $(B,\Sigma)$ pairs and mapped through
+the same identification code.
+
+**Prior variances.** With $s_i$ the AR residual standard deviation,
+the base variance of the coefficient on lag $l$ of variable $j$ in
+equation $i$ is $s_i^2/(s_j^2\,l^{\alpha})$, multiplied by
+
+* `type = "minnesota"`: $\lambda_1^2$ for own lags and $\lambda_1^2\lambda_2^2$ for other
+  variables (cross-variable shrinkage);
+* `type = "ssvs"` (George, Sun and Ni, 2008): $\lambda_1^2$ (slab) when an inclusion indicator
+  $\gamma_{ij}=1$ and $\rho^2\lambda_1^2$ (spike) otherwise, with
+  $\Pr(\gamma_{ij}=1)=$ `inclusion`;
+* `type = "horseshoe"` (Carvalho, Polson and Scott, 2010; Makalic and Schmidt, 2016): $\tau_i^2\lambda_{ij}^2$ with
+  half-Cauchy global ($\tau_i$) and local ($\lambda_{ij}$) scales, sampled via
+  inverse-gamma mixtures: aggressive shrinkage of noise coefficients and almost
+  no shrinkage of large ones.
+
+The contemporaneous coefficients $a_{ij}$ get a prior sd of $\lambda_5 s_i/s_j$
+and the constants of $\lambda_3 s_i$.
+
+```{r tri}
+fm <- bvarm(y, p = 4, prior = prior_triangular("minnesota"), ndraw = 1000, nburn = 500)
+fs <- bvarm(y, p = 4, prior = prior_triangular("ssvs"),      ndraw = 1000, nburn = 500)
+fh <- bvarm(y, p = 4, prior = prior_triangular("horseshoe"), ndraw = 1000, nburn = 500)
+fm
+```
+
+### SSVS inclusion probabilities and the horseshoe
+
+`$inclusion` holds the posterior probability that each lag coefficient
+belongs to the slab. Rows are the regressors in the same order as
+`coef()` (lag 1 of each variable, lag 2, ...), columns the equations.
+
+```{r ssvs}
+inc <- fs$inclusion
+dimnames(inc) <- list(rownames(coef(fs))[1:12], colnames(y))
+round(inc[1:6, ], 2)             # lags 1 and 2
+```
+
+The coefficients that matter (own first lags, the first lag of unemployment in
+the inflation and rate equations, and the second lag of inflation in its own
+equation) have inclusion probabilities near 1. Many other cross-variable and
+higher-lag coefficients end up at or below the prior value of 0.5, i.e. the data do not
+support keeping them.
+Shrinkage priors earn their keep when the lag length $p$ or the number of
+variables $K$ is large. Posterior mean coefficients across the three priors
+(equation `rate`, second lag block):
+
+```{r shrink-compare}
+round(cbind(minnesota = coef(fm)[5:7, "rate"], ssvs = coef(fs)[5:7, "rate"],
+            horseshoe = coef(fh)[5:7, "rate"]), 3)
+dim(fh$tau)                      # horseshoe global scale per equation, per draw
+```
+
+### Ordering caveat
+
+Because equation $i$ conditions on $y_1,\dots,y_{i-1}$, the *prior*
+(not the likelihood) depends on the order of the variables: shrinkage on
+$\Pi$ is applied to a rotated system. The differences are not negligible
+(compare with posterior standard deviations before dismissing them); check by
+reordering the data:
+
+```{r order}
+f1 <- bvarm(y,            p = 2, prior = prior_triangular("minnesota"), ndraw = 1000, nburn = 500)
+f2 <- bvarm(y[, 3:1],     p = 2, prior = prior_triangular("minnesota"), ndraw = 1000, nburn = 500)
+b1 <- coef(f1); b2 <- coef(f2)[rownames(b1), colnames(b1)]
+round(b1 - b2, 2)           # posterior-mean difference between the two orderings
+```
+
+Order the variables as in a recursive identification (slowest-moving first),
+which is also what the triangular sampler is naturally suited to. A
+"Cholesky" structural analysis of this sampler is consistent with its
+parametrisation.
+
+### Stochastic volatility
+
+With `sv = TRUE` each log-variance follows a random walk,
+$h_{it}=h_{i,t-1}+\nu_{it}$, $\nu_{it}\sim N(0,\sigma^2_{h,i})$, with an
+inverse-gamma$(a,b)$ prior on $\sigma_{h,i}^2$ and initial variance $V_0$
+(`sv_prior = c(a = 5, b = 0.04, V0 = 10)`; prior mean of $\sigma_h^2$ is $b/(a-1)=0.01$).
+Writing $\tilde y_{it}=\ln(\varepsilon_{it}^2\lambda_{it}+c)$ with
+$\varepsilon_{it}$ the equation residual, the model is linear in $h_{it}$ with a
+$\log\chi^2_1$ error, which Kim, Shephard and Chib (1998) (and Omori et al., 2007)
+approximate by a 10-component Gaussian mixture. Given the mixture
+indicators, $h_{i\cdot}$ is drawn jointly by forward-filtering,
+backward-sampling (Carter and Kohn, 1994; Frühwirth-Schnatter, 1994), then
+$\sigma_{h,i}^2$ from its inverse-gamma conditional.
+
+```{r sv, fig.height = 3.6}
+t_sv <- system.time(fsv <- bvarm(y, p = 2, prior = prior_triangular("minnesota"), ndraw = 1000, nburn = 1000, sv = TRUE))
+v <- volatility(fsv)                       # posterior-mean standard deviation of each structural shock
+yrv <- yr[-(1:2)]
+par(mfrow = c(1, 3), mar = c(3, 3, 2, 0.6), mgp = c(1.7, 0.5, 0))
+for (j in 1:3) { plot(yrv, v[, j], type = "l", lwd = 2, col = "firebrick", xlab = "", ylab = "", main = colnames(y)[j])
+                 abline(v = 1984, lty = 3, col = "grey50") }
+round(cbind(`pre-1984` = colMeans(v[yrv < 1984, ]), `post-1984` = colMeans(v[yrv >= 1984, ])), 3)
+```
+
+### Economic intuition / how to use it
+
+* **When SV matters.** The Great Moderation after the early 1980s lowered the
+  volatility of all three series (the dotted line marks 1984; the
+  post-1984 average standard deviation of all three structural shocks is
+  35-45% lower). A constant-variance VAR averages two regimes: it
+  overstates uncertainty in the moderation and understates it before.
+  Density forecasts and the *scale* of IRFs change; the *shape* of IRFs
+  (the dynamics) is unchanged because $B$ is constant. SV is therefore
+  mainly a gain for predictive densities and for correct structural scaling.
+* **2020.** The Covid episode in 2020 has outliers hundreds of times larger than
+  usual. A random-walk volatility absorbs them only slowly and leaves
+  volatility elevated for years, so predictive intervals after 2020 are too wide for
+  too long (Lenza and Primiceri, 2022). The sample here ends in 2006 and the
+  current release has no outlier-robust (e.g. $t$ or outlier-mixture)
+  variants: for 2020-21 data, drop or dummy the pandemic quarters, or
+  treat results with caution.
+* **IRFs under SV.** The reduced-form covariance varies in time. `irf()` uses
+  by default `vol = "last"`, the covariance at the end of the sample
+  (a low-volatility date here), whereas `vol = "mean"` uses the posterior
+  mean covariance: the size of the shock differs by a factor of two.
+
+```{r sv-irf}
+i_last <- irf(fsv, horizon = 12, vol = "last")
+i_mean <- irf(fsv, horizon = 12, vol = "mean")
+round(c(last = i_last$estimate["rate", "rate", 1], mean = i_mean$estimate["rate", "rate", 1]), 3)
+```
+
+Normalise with `normalise = list(shock = "rate", variable = "rate", size = 1)`
+to compare shapes across volatility dates. Forecasts from an SV fit simulate
+the volatility forward as a random walk, so the predictive density widens
+with the horizon even when the VAR is stationary.
+
+## 6. Convergence checks
+
+The conjugate sampler at fixed hyperparameters needs no diagnostics (draws are
+i.i.d.). Everything else is MCMC. Minimal checks, with base graphics:
+
+1. **Acceptance rate** of the hyperparameter Metropolis sampler (`fit$accept`;
+   aim at 0.2-0.45).
+2. **Trace and autocorrelation** of the hyperparameter draws.
+3. **Effective sample size** and **split $\hat R$** from two chains
+   started at different seeds.
+
+```{r conv, fig.height = 3.6}
+ess <- function(x) {                       # initial-positive-sequence ESS
+  a <- acf(x, lag.max = min(500, length(x) - 1), plot = FALSE)$acf[-1]
+  k <- which(a < 0)[1]; if (is.na(k)) k <- length(a)
+  length(x) / (1 + 2 * sum(a[seq_len(k - 1)]))
+}
+rhat <- function(chains) {                 # split R-hat on a list of equal-length chains
+  ch <- unlist(lapply(chains, function(x) { m <- length(x) %/% 2; list(x[1:m], x[m + 1:m]) }), recursive = FALSE)
+  n <- length(ch[[1]]); W <- mean(sapply(ch, var)); B <- n * var(sapply(ch, mean))
+  sqrt(((n - 1) / n * W + B / n) / W)
+}
+set.seed(11); c1 <- bvarm(y, p = 2, ndraw = 2000, nburn = 1000)
+set.seed(12); c2 <- bvarm(y, p = 2, ndraw = 2000, nburn = 1000)
+c(accept1 = c1$accept, accept2 = c2$accept)
+# effective sample sizes out of 2000 retained draws: use longer runs for tail quantiles
+round(rbind(ESS = apply(c1$hyper, 2, ess),
+            Rhat = sapply(colnames(c1$hyper), function(h) rhat(list(c1$hyper[, h], c2$hyper[, h])))), 3)
+par(mfrow = c(1, 3), mar = c(3, 3, 2, 0.6), mgp = c(1.7, 0.5, 0))
+plot(c1$hyper[, "lambda"], type = "l", col = "grey40", main = "trace: lambda", xlab = "", ylab = "")
+lines(c2$hyper[, "lambda"], col = adjustcolor("firebrick", 0.6))
+acf(c1$hyper[, "lambda"], main = "ACF: lambda", lag.max = 40)
+plot(cumsum(c1$hyper[, "lambda"]) / seq_len(2000), type = "l", main = "running mean: lambda", xlab = "", ylab = "")
+```
+
+For the triangular sampler, `thin` reduces storage but not the work; inspect
+traces of the quantities you care about (an impulse response at a given
+horizon, the volatility at a given date, the SSVS inclusion
+probabilities) rather than of thousands of coefficients. SV and
+shrinkage hyperparameters are the slowest mixing, so use a longer `nburn` for
+them.
+
+```{r conv-sv}
+ir_sv <- sapply(1:2, function(k) {
+  set.seed(20 + k)
+  f <- bvarm(y, p = 2, prior = prior_triangular("minnesota"), ndraw = 1000, nburn = 1000, sv = TRUE)
+  irf(f, horizon = 8, vol = "mean", normalise = list(shock = "rate", variable = "rate", size = 1),
+      level = 0.9)$estimate["unemployment", "rate", 5]
+})
+round(ir_sv, 3)    # posterior median response at horizon 4 from two independent chains
+```
+
+## 7. Speed
+
+All sampling loops are compiled. Wall-clock time (seconds, your machine
+will differ) for a `K = 3`, `p = 4` model:
+
+```{r speed}
+tm <- function(expr) unname(system.time(expr)[["elapsed"]])
+tab <- c(
+  `NIW, fixed hyperparameters (5000 draws)`      = tm(bvarm(y, 4, prior_minnesota(hyper = character(0)), ndraw = 5000)),
+  `NIW, hierarchical (3000 draws + 1000 burn-in)` = tm(bvarm(y, 4, ndraw = 3000, nburn = 1000)),
+  `triangular Minnesota (2000 sweeps)`           = tm(bvarm(y, 4, prior_triangular("minnesota"), ndraw = 1500, nburn = 500)),
+  `triangular SSVS (2000 sweeps)`                = tm(bvarm(y, 4, prior_triangular("ssvs"), ndraw = 1500, nburn = 500)),
+  `triangular horseshoe (2000 sweeps)`           = tm(bvarm(y, 4, prior_triangular("horseshoe"), ndraw = 1500, nburn = 500)),
+  `triangular + SV (2000 sweeps)`                = tm(bvarm(y, 4, prior_triangular("minnesota"), ndraw = 1500, nburn = 500, sv = TRUE)))
+round(tab, 2)
+```
+
+## 8. Comparison with the BVAR package
+
+The `BVAR` package (Kuschnig and Vashold, 2021) implements the same
+hierarchical Minnesota/SOC/SUR prior. A like-for-like comparison needs one
+caveat: **the default scale $\Psi$ differs**. `BVAR` chooses the inverse-Wishart
+scale $\psi$ from its own "auto" rule (here roughly 3 times larger for
+inflation and unemployment and 1.2 times for the interest rate than the AR($p$)
+residual variances used by `bvarm()`), which in turn changes the posterior of $\lambda$. Passing the same
+$\psi$ to both gives matching results:
+
+```{r bvar-pkg, eval = have_bvar}
+b <- BVAR::bvar(y, lags = 2, n_draw = 12000, n_burn = 3000, n_thin = 4L, verbose = FALSE,
+                priors = BVAR::bv_priors(hyper = c("lambda", "soc", "sur"),
+                                         mn = BVAR::bv_mn(lambda = BVAR::bv_lambda(mode = 0.2, sd = 0.4, min = 1e-4, max = 5)),
+                                         soc = BVAR::bv_soc(), sur = BVAR::bv_sur()))
+psi_b <- b$priors$psi$mode                                # BVAR's own default scale
+f_def <- bvarm(y, 2, ndraw = 3000, nburn = 1000)           # varm default scale (AR(p) variances)
+f_eq  <- bvarm(y, 2, prior_minnesota(psi = psi_b), ndraw = 3000, nburn = 1000)
+t_v <- tm(bvarm(y, 2, prior_minnesota(psi = psi_b), ndraw = 3000, nburn = 1000))
+t_b <- tm(BVAR::bvar(y, lags = 2, n_draw = 4000, n_burn = 1000, verbose = FALSE))
+hy <- rbind(`varm, default psi`   = colMeans(f_def$hyper),
+            `varm, BVAR psi`      = colMeans(f_eq$hyper),
+            `BVAR`                = colMeans(b$hyper[, c("lambda", "soc", "sur")]))
+round(hy, 3)
+```
+
+```{r bvar-irf, eval = have_bvar}
+ib <- BVAR::irf(b, BVAR::bv_irf(horizon = 17, identification = TRUE), n_thin = 1L)
+mb <- apply(ib$irf, c(2, 3, 4), median)                   # [response, horizon, shock]
+iv <- irf(f_eq, horizon = 16)
+cmp <- rbind(varm = iv$estimate["unemployment", "rate", c(1, 5, 9, 17)],
+             BVAR = mb[2, c(1, 5, 9, 17), 3])
+colnames(cmp) <- paste0("h=", c(0, 4, 8, 16))
+round(cmp, 3)                                            # same Cholesky ordering, one-sd shock
+round(c(`varm seconds` = t_v, `BVAR seconds` = t_b), 2)
+```
+
+What to take from this comparison. (i) With the same prior inputs the two
+implementations agree on the IRFs to about the second decimal and on the
+hyperparameter posterior means within Monte Carlo error, which validates the NIW
+code. (ii) The default $\psi$ is a *modelling*
+choice with a visible effect on $\lambda$; check it before comparing numbers
+across packages. (iii) `varm` is faster in wall-clock time; part of this is the compiled
+sampler, part the adaptive proposal (acceptance 25-45% against a lower rate
+for `BVAR`'s default), so each retained draw is worth more. Compare effective
+sample sizes, not nominal draws. (iv) `BVAR` offers features not (yet) in `varm`,
+such as conditional forecasts and a richer set of hyperparameters (see
+`vignette("choosing-a-method")`).
+
+## Extensions (added by module: TVP-VAR-SV and MCMC diagnostics)
+
+<!-- STUB: modules append their chapters below this line.
+     - Time-varying-parameter VAR with stochastic volatility
+     - Built-in MCMC diagnostics (ESS, R-hat) replacing the ad hoc helpers in section 6
+     Do not document functions that are not yet exported. -->
+
+## References
+
+* Bańbura, M., Giannone, D. and Reichlin, L. (2010). Large Bayesian vector auto regressions. *Journal of Applied Econometrics*, 25(1), 71-92.
+* Carriero, A., Clark, T. E. and Marcellino, M. (2019). Large Bayesian vector autoregressions with stochastic volatility and non-conjugate priors. *Journal of Econometrics*, 212(1), 137-154.
+* Carter, C. K. and Kohn, R. (1994). On Gibbs sampling for state space models. *Biometrika*, 81(3), 541-553.
+* Carvalho, C. M., Polson, N. G. and Scott, J. G. (2010). The horseshoe estimator for sparse signals. *Biometrika*, 97(2), 465-480.
+* Cogley, T. and Sargent, T. J. (2005). Drifts and volatilities: monetary policies and outcomes in the post WWII US. *Review of Economic Dynamics*, 8(2), 262-302.
+* Doan, T., Litterman, R. and Sims, C. (1984). Forecasting and conditional projection using realistic prior distributions. *Econometric Reviews*, 3(1), 1-100.
+* Frühwirth-Schnatter, S. (1994). Data augmentation and dynamic linear models. *Journal of Time Series Analysis*, 15(2), 183-202.
+* George, E. I., Sun, D. and Ni, S. (2008). Bayesian stochastic search for VAR model restrictions. *Journal of Econometrics*, 142(1), 553-580.
+* Giannone, D., Lenza, M. and Primiceri, G. E. (2015). Prior selection for vector autoregressions. *Review of Economics and Statistics*, 97(2), 436-451.
+* Kim, S., Shephard, N. and Chib, S. (1998). Stochastic volatility: likelihood inference and comparison with ARCH models. *Review of Economic Studies*, 65(3), 361-393.
+* Kuschnig, N. and Vashold, L. (2021). BVAR: Bayesian vector autoregressions with hierarchical prior selection in R. *Journal of Statistical Software*, 100(14), 1-27.
+* Lenza, M. and Primiceri, G. E. (2022). How to estimate a VAR after March 2020. *Journal of Applied Econometrics*, 37(4), 688-699.
+* Litterman, R. B. (1986). Forecasting with Bayesian vector autoregressions: five years of experience. *Journal of Business & Economic Statistics*, 4(1), 25-38.
+* Makalic, E. and Schmidt, D. F. (2016). A simple sampler for the horseshoe estimator. *IEEE Signal Processing Letters*, 23(1), 179-182.
+* Omori, Y., Chib, S., Shephard, N. and Nakajima, J. (2007). Stochastic volatility with leverage: fast and efficient likelihood inference. *Journal of Econometrics*, 140(2), 425-449.
+* Sims, C. A. (1993). A nine-variable probabilistic macroeconomic forecasting model. In *Business Cycles, Indicators and Forecasting*, NBER, 179-212.
