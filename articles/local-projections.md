@@ -136,7 +136,7 @@ head(tidy(l), 4)
 #> # A tibble: 4 × 7
 #>   horizon response  estimate std.error level  conf.low conf.high
 #>     <int> <fct>        <dbl>     <dbl> <dbl>     <dbl>     <dbl>
-#> 1       0 infl     -1.24e-14  1.37e-13   0.9 -2.39e-13  2.14e-13
+#> 1       0 infl      1.51e-14  9.62e-14   0.9 -1.43e-13  1.73e-13
 #> 2       1 infl     -5.89e- 2  4.20e- 2   0.9 -1.28e- 1  1.01e- 2
 #> 3       2 infl     -6.16e- 2  7.23e- 2   0.9 -1.81e- 1  5.74e- 2
 #> 4       3 infl     -3.15e- 2  1.05e- 1   0.9 -2.04e- 1  1.41e- 1
@@ -460,7 +460,7 @@ cmp <- compare_lp_var(yraw, shock = unemp, horizon = 12, lags = 2)
 cmp
 #> <lp_var_cmp> shock 'unemp', 2 lags; mean |LP - VAR| / se_LP by horizon block:
 #>         infl  rate unemp
-#> short  0.274 0.276 0.701
+#> short  0.252 0.276 0.377
 #> medium 0.498 0.152 0.344
 #> long   0.189 0.519 0.500
 cmp |>
@@ -468,7 +468,7 @@ cmp |>
   as.data.frame() |>
   round(3)
 #>   horizon     lp lp_se    var   diff      z
-#> 1       0  0.000 0.000  0.000  0.000 -0.329
+#> 1       0  0.000 0.000  0.000  0.000  0.220
 #> 2       4 -0.904 0.240 -0.790 -0.114 -0.476
 #> 3       8 -1.005 0.357 -0.815 -0.190 -0.533
 #> 4      12 -0.675 0.318 -0.613 -0.062 -0.194

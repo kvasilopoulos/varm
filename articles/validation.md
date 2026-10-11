@@ -104,14 +104,14 @@ if (have("vars")) {
 #> # A tibble: 8 × 2
 #>   quantity                           max_abs_diff
 #>   <chr>                              <chr>       
-#> 1 coefficients B                     3.9e-13     
-#> 2 residual covariance                2.2e-16     
-#> 3 log-likelihood                     0.0e+00     
-#> 4 information criteria (AIC, HQ, SC) 2.7e-15     
-#> 5 root moduli (companion)            3.8e-13     
-#> 6 Cholesky IRF, h = 0..12            6.1e-13     
-#> 7 FEVD, h = 0..12                    5.8e-13     
-#> 8 point forecast, h = 1..8           7.1e-12     
+#> 1 coefficients B                     2.9e-13     
+#> 2 residual covariance                1.1e-16     
+#> 3 log-likelihood                     5.7e-14     
+#> 4 information criteria (AIC, HQ, SC) 4.4e-15     
+#> 5 root moduli (companion)            2.1e-13     
+#> 6 Cholesky IRF, h = 0..12            2.2e-13     
+#> 7 FEVD, h = 0..12                    3.3e-13     
+#> 8 point forecast, h = 1..8           2.3e-12     
 #> lag order chosen (AIC, HQ, SC, FPE): varm 6 2 2 6 | vars 6 2 2 6
 ```
 
@@ -128,7 +128,7 @@ if (have("vars")) {
   P <- irf(varm(Y[, 1:2], p = 2), id = id_longrun(), horizon = 0, ci = "none")$estimate[, , 1]
   cat("max | |P_varm| - |P_vars| | =", sci(max(abs(abs(unname(P)) - abs(unname(bq$B))))), "(columns match up to sign)\n")
 }
-#> max | |P_varm| - |P_vars| | = 1.7e-13 (columns match up to sign)
+#> max | |P_varm| - |P_vars| | = 5.4e-14 (columns match up to sign)
 ```
 
 ### 2.3 Local projections against `lm` + `sandwich`
@@ -168,9 +168,9 @@ if (have("sandwich")) {
 #> # A tibble: 3 × 3
 #>   quantity       max_abs_diff horizons             
 #>   <chr>          <chr>        <chr>                
-#> 1 LP coefficient 7.3e-14      0..6, all 3 responses
-#> 2 Newey-West se  2.7e-13      0..6, all 3 responses
-#> 3 HC1 se         2.9e-13      0..6, all 3 responses
+#> 1 LP coefficient 1.2e-13      0..6, all 3 responses
+#> 2 Newey-West se  1.2e-13      0..6, all 3 responses
+#> 3 HC1 se         1.7e-13      0..6, all 3 responses
 ```
 
 ### 2.4 State-dependent LP against `lpirfs::lp_nl`
@@ -199,8 +199,8 @@ if (have("lpirfs")) {
   apply(d, 1:2, sci)
 }
 #>      shock 1   shock 2   shock 3  
-#> high "1.5e-13" "2.4e-13" "2.6e-13"
-#> low  "2.2e-13" "3.1e-13" "4.0e-13"
+#> high "1.8e-13" "1.5e-13" "1.3e-13"
+#> low  "2.0e-13" "2.8e-13" "2.6e-13"
 ```
 
 ### 2.5 Hierarchical Bayesian VAR: log posterior against `BVAR`
@@ -232,7 +232,7 @@ if (have("BVAR")) {
   cat(sprintf("log posterior: BVAR %.10f  varm %.10f  |diff| = %s (relative %s)\n",
               bv$optim$value, v, sci(abs(v - bv$optim$value)), sci(abs(v - bv$optim$value) / abs(v))))
 }
-#> log posterior: BVAR -403.7381334206  varm -403.7381334206  |diff| = 1.0e-12 (relative 2.5e-15)
+#> log posterior: BVAR -403.7381334206  varm -403.7381334206  |diff| = 1.4e-12 (relative 3.4e-15)
 ```
 
 ### 2.6 Draw-based IRFs: consistency of the three uncertainty engines

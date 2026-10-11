@@ -80,5 +80,5 @@ fit <- lp_joint(yraw, shock = rate, horizon = 8, lags = 2, contemp = c(infl, une
 b <- lp_supt(fit, level = 0.9, seed = 1)
 attr(b, "crit")
 #>     infl    unemp     rate 
-#> 2.251103 2.323445 2.267141 
+#> 2.251103 2.333796 2.275722 
 ```

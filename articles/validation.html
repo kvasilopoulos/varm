@@ -243,14 +243,14 @@ calibration</td>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 2</span></span></span>
 <span><span class="co">#&gt;   quantity                           max_abs_diff</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> coefficients B                     3.9e-13     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> residual covariance                2.2e-16     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> log-likelihood                     0.0e+00     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> information criteria (AIC, HQ, SC) 2.7e-15     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> root moduli (companion)            3.8e-13     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Cholesky IRF, h = 0..12            6.1e-13     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> FEVD, h = 0..12                    5.8e-13     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> point forecast, h = 1..8           7.1e-12     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> coefficients B                     2.9e-13     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> residual covariance                1.1e-16     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> log-likelihood                     5.7e-14     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> information criteria (AIC, HQ, SC) 4.4e-15     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> root moduli (companion)            2.1e-13     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Cholesky IRF, h = 0..12            2.2e-13     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> FEVD, h = 0..12                    3.3e-13     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> point forecast, h = 1..8           2.3e-12     </span></span>
 <span><span class="co">#&gt; lag order chosen (AIC, HQ, SC, FPE): varm 6 2 2 6 | vars 6 2 2 6</span></span></code></pre></div>
 <p>The unit tests assert agreement to <code>1e-9</code>; the observed
 differences above are rounding-level. Lag selection is identical (the
@@ -265,7 +265,7 @@ information criteria differ by rounding only).</p>
 <span>  <span class="va">P</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dynamics.html">irf</a></span><span class="op">(</span><span class="fu"><a href="../reference/varm.html">varm</a></span><span class="op">(</span><span class="va">Y</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, p <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>, id <span class="op">=</span> <span class="fu"><a href="../reference/identification.html">id_longrun</a></span><span class="op">(</span><span class="op">)</span>, horizon <span class="op">=</span> <span class="fl">0</span>, ci <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span><span class="op">$</span><span class="va">estimate</span><span class="op">[</span>, , <span class="fl">1</span><span class="op">]</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"max | |P_varm| - |P_vars| | ="</span>, <span class="fu">sci</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="va">P</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="va">bq</span><span class="op">$</span><span class="va">B</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="st">"(columns match up to sign)\n"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; max | |P_varm| - |P_vars| | = 1.7e-13 (columns match up to sign)</span></span></code></pre></div>
+<span><span class="co">#&gt; max | |P_varm| - |P_vars| | = 5.4e-14 (columns match up to sign)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="local-projections-against-lm-sandwich">2.3 Local projections against <code>lm</code> +
@@ -306,9 +306,9 @@ no prewhitening, no small-sample factor) and HC1 variances from
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
 <span><span class="co">#&gt;   quantity       max_abs_diff horizons             </span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> LP coefficient 7.3e-14      0..6, all 3 responses</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Newey-West se  2.7e-13      0..6, all 3 responses</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> HC1 se         2.9e-13      0..6, all 3 responses</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> LP coefficient 1.2e-13      0..6, all 3 responses</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Newey-West se  1.2e-13      0..6, all 3 responses</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> HC1 se         1.7e-13      0..6, all 3 responses</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="state-dependent-lp-against-lpirfslp_nl">2.4 State-dependent LP against <code>lpirfs::lp_nl</code><a class="anchor" aria-label="anchor" href="#state-dependent-lp-against-lpirfslp_nl"></a>
@@ -336,8 +336,8 @@ section 3.4.</p>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">d</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="va">sci</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span><span class="co">#&gt;      shock 1   shock 2   shock 3  </span></span>
-<span><span class="co">#&gt; high "1.5e-13" "2.4e-13" "2.6e-13"</span></span>
-<span><span class="co">#&gt; low  "2.2e-13" "3.1e-13" "4.0e-13"</span></span></code></pre></div>
+<span><span class="co">#&gt; high "1.8e-13" "1.5e-13" "1.3e-13"</span></span>
+<span><span class="co">#&gt; low  "2.0e-13" "2.8e-13" "2.6e-13"</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="hierarchical-bayesian-var-log-posterior-against-bvar">2.5 Hierarchical Bayesian VAR: log posterior against
@@ -370,7 +370,7 @@ numerical rounding. It uses internal helper functions
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"log posterior: BVAR %.10f  varm %.10f  |diff| = %s (relative %s)\n"</span>,</span>
 <span>              <span class="va">bv</span><span class="op">$</span><span class="va">optim</span><span class="op">$</span><span class="va">value</span>, <span class="va">v</span>, <span class="fu">sci</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">v</span> <span class="op">-</span> <span class="va">bv</span><span class="op">$</span><span class="va">optim</span><span class="op">$</span><span class="va">value</span><span class="op">)</span><span class="op">)</span>, <span class="fu">sci</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">v</span> <span class="op">-</span> <span class="va">bv</span><span class="op">$</span><span class="va">optim</span><span class="op">$</span><span class="va">value</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">v</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; log posterior: BVAR -403.7381334206  varm -403.7381334206  |diff| = 1.0e-12 (relative 2.5e-15)</span></span></code></pre></div>
+<span><span class="co">#&gt; log posterior: BVAR -403.7381334206  varm -403.7381334206  |diff| = 1.4e-12 (relative 3.4e-15)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="draw-based-irfs-consistency-of-the-three-uncertainty-engines">2.6 Draw-based IRFs: consistency of the three uncertainty
